@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 45,
     paddingBottom: 24,
   },
   backButton: {
@@ -362,7 +362,9 @@ const styles = StyleSheet.create({
   summaryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
+    paddingTop: 10,
+
   },
   summaryTitle: {
     fontSize: 12,
@@ -370,6 +372,7 @@ const styles = StyleSheet.create({
     color: '#1E3A5F',
     marginLeft: 8,
     letterSpacing: 0.5,
+    
   },
   summaryTextContainer: {
     backgroundColor: '#F9FAFB',

@@ -6,21 +6,78 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  StatusBar
+  StatusBar,
+  Alert
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useVerifications } from '../contexts/VerificationContext';
+import { verifyBusiness } from '../data/cacDatabase';
 
 export default function VerifyBusinessScreen() {
   const [businessName, setBusinessName] = useState('');
   const [rcNumber, setRcNumber] = useState('');
   const [document, setDocument] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { addVerification } = useVerifications();
 
   const handleSubmit = () => {
-    // Handle form submission
-    console.log('Submitting verification:', { businessName, rcNumber, document });
-    // Navigate to success screen
-    router.push('/request-submitted');
+    // Validate inputs
+    if (!businessName.trim() || !rcNumber.trim()) {
+      Alert.alert('Missing Information', 'Please enter both business name and RC number');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Simulate API delay
+    setTimeout(() => {
+      // Look up in CAC database
+      const cacResult = verifyBusiness(businessName.trim(), rcNumber.trim());
+      
+      let status: 'pending' | 'verified' | 'rejected' | 'flagged' = 'pending';
+      let cacData = undefined;
+
+      if (cacResult.found && cacResult.record) {
+        // Map CAC verification status to our status
+        if (cacResult.record.verification_status === 'VERIFIED' && cacResult.match) {
+          status = 'verified';
+        } else if (cacResult.record.verification_status === 'FLAGGED') {
+          status = 'flagged';
+        } else if (cacResult.record.verification_status === 'REJECTED' || !cacResult.match) {
+          status = 'rejected';
+        }
+
+        cacData = {
+          supplier_id: cacResult.record.supplier_id,
+          business_type: cacResult.record.business_type,
+          industry_category: cacResult.record.industry_category,
+          state: cacResult.record.state,
+          registration_date: cacResult.record.registration_date,
+          verification_status: cacResult.record.verification_status,
+          verification_reason: cacResult.reason || cacResult.record.verification_reason
+        };
+      }
+
+      // Add to verification history
+      const newVerification = addVerification({
+        businessName: businessName.trim(),
+        registrationNumber: rcNumber.trim(),
+        status,
+        cacData
+      });
+
+      setIsSubmitting(false);
+
+      // Navigate to success screen with verification ID
+      router.push({
+        pathname: '/request-submitted',
+        params: {
+          verificationId: newVerification.id,
+          status: newVerification.status
+        }
+      });
+    }, 1500); // Simulate 1.5s processing time
   };
 
   const handleDocumentUpload = () => {
@@ -110,11 +167,16 @@ export default function VerifyBusinessScreen() {
       {/* Submit Button */}
       <View style={styles.bottomContainer}>
         <TouchableOpacity 
-          style={styles.submitButton}
+          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
           onPress={handleSubmit}
+          disabled={isSubmitting}
         >
-          <Text style={styles.submitButtonText}>Submit for Review</Text>
-          <Ionicons name="arrow-forward" size={20} color="#fff" style={styles.submitArrow} />
+          <Text style={styles.submitButtonText}>
+            {isSubmitting ? 'Processing...' : 'Submit for Review'}
+          </Text>
+          {!isSubmitting && (
+            <Ionicons name="arrow-forward" size={20} color="#fff" style={styles.submitArrow} />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -319,6 +381,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#9CA3AF',
+    opacity: 0.6,
   },
   submitButtonText: {
     color: '#fff',

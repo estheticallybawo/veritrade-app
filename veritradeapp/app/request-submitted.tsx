@@ -6,11 +6,26 @@ import {
   TouchableOpacity,
   StatusBar
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function RequestSubmittedScreen() {
-  const requestId = '#VT-3343';
+  const params = useLocalSearchParams();
+  const verificationId = (params.verificationId as string) || '#VT-0000';
+  const status = (params.status as string) || 'pending';
+
+  const getStatusMessage = () => {
+    switch (status) {
+      case 'verified':
+        return 'Your verification has been completed instantly! The business is registered and verified.';
+      case 'rejected':
+        return 'We could not verify this business. Please check the details and try again.';
+      case 'flagged':
+        return 'This business has been flagged. Business transations with this company is not advised.';
+      default:
+        return 'Your verification request has been received. Our team will review it within 24-48 hours.';
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -19,21 +34,32 @@ export default function RequestSubmittedScreen() {
       <View style={styles.content}>
         {/* Success Icon */}
         <View style={styles.iconContainer}>
-          <View style={styles.successCircle}>
-            <Ionicons name="checkmark" size={48} color="#fff" />
+          <View style={[
+            styles.successCircle,
+            status === 'verified' && styles.verifiedCircle,
+            status === 'rejected' && styles.rejectedCircle,
+            status === 'flagged' && styles.flaggedCircle
+          ]}>
+            <Ionicons 
+              name={status === 'verified' ? 'checkmark' : status === 'rejected' ? 'close' : status === 'flagged' ? 'alert' : 'checkmark'} 
+              size={48} 
+              color="#fff" 
+            />
           </View>
         </View>
 
         {/* Title */}
-        <Text style={styles.title}>Request Submitted!</Text>
+        <Text style={styles.title}>
+          {status === 'verified' ? 'Verified!' : status === 'rejected' ? 'Not Found' : status === 'flagged' ? 'Flagged for Review' : 'Request Submitted!'}
+        </Text>
 
         {/* Description */}
         <View style={styles.descriptionContainer}>
           <Text style={styles.description}>
-            Your verification request{' '}
-            <Text style={styles.requestId}>{requestId}</Text>
-            {' '}has been received. Our team will review it within{' '}
-            <Text style={styles.timeframe}>24-48 hours</Text>.
+            {status !== 'pending' && 'Verification Request '}
+            <Text style={styles.requestId}>{verificationId}</Text>
+            {'\n\n'}
+            {getStatusMessage()}
           </Text>
         </View>
 
@@ -41,17 +67,9 @@ export default function RequestSubmittedScreen() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity 
             style={styles.primaryButton}
-            onPress={() => router.push({
-              pathname: '/request-detail',
-              params: {
-                status: 'pending',
-                entityName: 'Your Business',
-                rcNumber: 'RC-PENDING',
-                statusDate: 'FEB 23, 2026'
-              }
-            })}
+            onPress={() => router.push('/verification-history')}
           >
-            <Text style={styles.primaryButtonText}>Track Status</Text>
+            <Text style={styles.primaryButtonText}>View History</Text>
             <Ionicons name="arrow-forward" size={20} color="#fff" style={styles.buttonIcon} />
           </TouchableOpacity>
 
@@ -119,6 +137,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 8,
+  },
+  verifiedCircle: {
+    backgroundColor: '#10B981',
+    shadowColor: '#10B981',
+  },
+  rejectedCircle: {
+    backgroundColor: '#EF4444',
+    shadowColor: '#EF4444',
+  },
+  flaggedCircle: {
+    backgroundColor: '#F59E0B',
+    shadowColor: '#F59E0B',
   },
   title: {
     fontSize: 32,

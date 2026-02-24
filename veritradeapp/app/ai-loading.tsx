@@ -182,6 +182,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: 20
   },
   headerIcon: {
     marginRight: 8,
@@ -191,6 +192,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
     letterSpacing: 1,
+    
   },
   content: {
     flex: 1,
