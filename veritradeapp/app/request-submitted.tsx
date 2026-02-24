@@ -21,7 +21,7 @@ export default function RequestSubmittedScreen() {
       case 'rejected':
         return 'We could not verify this business. Please check the details and try again.';
       case 'flagged':
-        return 'This business has been flagged. Business transations with this company is not advised.';
+        return 'This business has been flagged for inactivity. Business transations with this company is not advised.';
       default:
         return 'Your verification request has been received. Our team will review it within 24-48 hours.';
     }

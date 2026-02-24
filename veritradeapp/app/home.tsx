@@ -204,7 +204,7 @@ export default function HomeScreen() {
             params: {
               status: 'pending',
               entityName: 'Glow Beauty & Spa',
-              rcNumber: 'BN-112233',
+              rcNumber: 'RC742053',
               statusDate: 'FEB 19, 2026'
             }
           })}

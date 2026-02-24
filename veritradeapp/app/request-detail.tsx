@@ -93,7 +93,7 @@ export default function RequestDetailScreen() {
           <Text style={styles.statusTitle}>Flagged for Review</Text>
           <Text style={styles.statusDate}>STATUS AS OF {statusDate}</Text>
           <Text style={styles.statusMessage}>
-            "This business has been flagged. Our team is investigating..."
+            "This business has been flagged for inactivity. Conducting business with them is at your own risk"
           </Text>
         </View>
       );

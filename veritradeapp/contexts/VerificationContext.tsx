@@ -34,10 +34,10 @@ const STORAGE_KEY = '@veritrade_verifications';
 const MOCK_INITIAL_DATA: Verification[] = [
   {
     id: 'VT-3343',
-    businessName: 'Aliko Logistics Ltd',
-    registrationNumber: 'RC856259',
+    businessName: 'Deji Logistics Ltd',
+    registrationNumber: 'RC982341',
     status: 'verified',
-    submittedDate: '2026-02-20',
+    submittedDate: '2026-02-18',
     reviewedDate: '2026-02-21',
     cacData: {
       supplier_id: 'BUS0000001',
@@ -51,7 +51,7 @@ const MOCK_INITIAL_DATA: Verification[] = [
   },
   {
     id: 'VT-3342',
-    businessName: 'Tech Solutions Inc',
+    businessName: 'Glow Beauty & Spa',
     registrationNumber: 'RC742053',
     status: 'pending',
     submittedDate: '2026-02-23',
