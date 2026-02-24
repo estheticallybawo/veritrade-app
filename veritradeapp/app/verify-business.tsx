@@ -32,7 +32,7 @@ export default function VerifyBusinessScreen() {
 
     // Simulate API delay
     setTimeout(() => {
-      
+
       // Look up in CAC database
       const cacResult = verifyBusiness(businessName.trim(), rcNumber.trim());
       
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 45,
     paddingBottom: 20,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
