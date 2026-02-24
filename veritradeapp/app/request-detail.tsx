@@ -10,8 +10,9 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useVerifications } from '../contexts/VerificationContext';
 
-type VerificationStatus = 'verified' | 'pending' | 'in-progress';
+type VerificationStatus = 'verified' | 'pending' | 'rejected' | 'flagged';
 type LifecycleStage = 'completed' | 'in-progress' | 'awaiting';
 
 interface LifecycleStep {
@@ -23,9 +24,15 @@ interface LifecycleStep {
 export default function RequestDetailScreen() {
   // Get params from navigation
   const params = useLocalSearchParams();
-  const status = (params.status as VerificationStatus) || 'pending';
-  const entityName = (params.entityName as string) || 'Deji Logistics Ltd';
-  const rcNumber = (params.rcNumber as string) || 'RC-982341';
+  const verificationId = (params.id as string);
+  const { getVerificationById } = useVerifications();
+  
+  // Get verification from context if ID provided
+  const verification = verificationId ? getVerificationById(verificationId) : null;
+  
+  const status = (verification?.status as VerificationStatus) || (params.status as VerificationStatus) || 'pending';
+  const entityName = verification?.businessName || (params.entityName as string) || 'Deji Logistics Ltd';
+  const rcNumber = verification?.registrationNumber || (params.rcNumber as string) || 'RC-982341';
   const statusDate = (params.statusDate as string) || 'FEB 19, 2026';
 
   const lifecycleSteps: LifecycleStep[] = [
@@ -36,18 +43,18 @@ export default function RequestDetailScreen() {
     },
     {
       title: 'Document Verification',
-      subtitle: status === 'verified' ? 'Completed' : 'In Progress',
-      status: status === 'verified' ? 'completed' : 'in-progress',
+      subtitle: status === 'verified' ? 'Completed' : status === 'rejected' ? 'Failed' : status === 'flagged' ? 'In Progress' : 'In Progress',
+      status: status === 'verified' ? 'completed' : status === 'rejected' ? 'completed' : 'in-progress',
     },
     {
       title: 'CAC Matching',
-      subtitle: status === 'verified' ? 'Completed' : 'Awaiting',
-      status: status === 'verified' ? 'completed' : 'awaiting',
+      subtitle: status === 'verified' ? 'Completed' : status === 'rejected' ? 'Failed' : status === 'flagged' ? 'In Progress' : 'Awaiting',
+      status: status === 'verified' ? 'completed' : status === 'rejected' ? 'completed' : 'in-progress',
     },
     {
       title: 'Final Trust Result',
-      subtitle: status === 'verified' ? 'Completed' : 'Awaiting',
-      status: status === 'verified' ? 'completed' : 'awaiting',
+      subtitle: status === 'verified' ? 'Completed' : status === 'rejected' ? 'Rejected' : status === 'flagged' ? 'Flagged for Review' : 'Awaiting',
+      status: status === 'verified' ? 'completed' : status === 'rejected' || status === 'flagged' ? 'completed' : 'awaiting',
     },
   ];
 
@@ -72,6 +79,36 @@ export default function RequestDetailScreen() {
           <Text style={styles.statusDate}>STATUS AS OF {statusDate}</Text>
           <Text style={styles.statusMessage}>
             "CAC Match Found. Active for 8 years."
+          </Text>
+        </View>
+      );
+    }
+
+    if (status === 'flagged') {
+      return (
+        <View style={[styles.statusCard, styles.statusCardFlagged]}>
+          <View style={styles.statusIconCircleOrange}>
+            <Ionicons name="alert" size={40} color="#fff" />
+          </View>
+          <Text style={styles.statusTitle}>Flagged for Review</Text>
+          <Text style={styles.statusDate}>STATUS AS OF {statusDate}</Text>
+          <Text style={styles.statusMessage}>
+            "This business has been flagged. Our team is investigating..."
+          </Text>
+        </View>
+      );
+    }
+
+    if (status === 'rejected') {
+      return (
+        <View style={[styles.statusCard, styles.statusCardRejected]}>
+          <View style={styles.statusIconCircleRed}>
+            <Ionicons name="close-circle" size={40} color="#fff" />
+          </View>
+          <Text style={styles.statusTitle}>Not Verified</Text>
+          <Text style={styles.statusDate}>STATUS AS OF {statusDate}</Text>
+          <Text style={styles.statusMessage}>
+            "Could not find matching CAC record. Please check the details."
           </Text>
         </View>
       );
@@ -276,6 +313,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F9FF',
     borderColor: '#E0F2FE',
   },
+  statusCardFlagged: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FEE3B1',
+  },
+  statusCardRejected: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
+  },
   statusIconCircleGreen: {
     width: 80,
     height: 80,
@@ -290,6 +335,24 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     backgroundColor: '#1E3A5F',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  statusIconCircleOrange: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#F59E0B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  statusIconCircleRed: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#EF4444',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
