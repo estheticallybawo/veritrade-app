@@ -55,7 +55,7 @@ Content-Type: application/json
 ### Test 4: Submit Verification Request
 POST http://localhost:5000/api/verifications/submit
 Content-Type: application/json
-Authorization: Bearer YOUR_BUYER_TOKEN_HERE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJidXllckB2ZXJpdHJhZGUuY29tIiwicm9sZSI6ImJ1eWVyIiwiaWF0IjoxNzcxOTg4MzQ5LCJleHAiOjE3NzI1OTMxNDl9.LkW46rl3r9Fykh8A2X8i_OR4807jN1YoCriajrAgbn4
 
 {
   "business_name": "EcoTech Solutions Ltd",
@@ -66,7 +66,7 @@ Authorization: Bearer YOUR_BUYER_TOKEN_HERE
 
 ### Test 5: Get My Verification Requests
 GET http://localhost:5000/api/verifications/my-requests
-Authorization: Bearer YOUR_BUYER_TOKEN_HERE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJidXllckB2ZXJpdHJhZGUuY29tIiwicm9sZSI6ImJ1eWVyIiwiaWF0IjoxNzcxOTg4MzQ5LCJleHAiOjE3NzI1OTMxNDl9.LkW46rl3r9Fykh8A2X8i_OR4807jN1YoCriajrAgbn4
 
 ###
 

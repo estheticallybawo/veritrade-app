@@ -6,25 +6,72 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  StatusBar
+  StatusBar,
+  Alert
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useVerifications } from '../contexts/VerificationContext';
+import { verificationService } from '../services/verification';
 
 export default function VerifyBusinessScreen() {
   const [businessName, setBusinessName] = useState('');
   const [rcNumber, setRcNumber] = useState('');
   const [document, setDocument] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { addVerification } = useVerifications();
 
-  const handleSubmit = () => {
-    // Handle form submission
-    console.log('Submitting verification:', { businessName, rcNumber, document });
-    // Navigate to success screen
-    router.push('/request-submitted');
+  const handleSubmit = async () => {
+    console.log('=== SUBMIT STARTED ===');
+    
+    if (!businessName.trim() || !rcNumber.trim()) {
+      Alert.alert('Missing Information', 'Please enter both business name and RC number');
+      return;
+    }
+
+    console.log('Submitting:', { businessName, rcNumber });
+    setIsSubmitting(true);
+
+    try {
+      console.log('Calling verificationService.submit...');
+      const response = await verificationService.submit({
+        business_name: businessName.trim(),
+        registration_number: rcNumber.trim(),
+      });
+
+      console.log('Response received:', response);
+      // Add to local context for UI
+      const statusMap: { [key: number]: "pending" | "verified" | "rejected" | "flagged" } = {
+        0: "pending",
+        1: "verified",
+        2: "rejected",
+        3: "flagged"
+      };
+      
+      const newVerification = addVerification({
+        businessName: businessName.trim(),
+        registrationNumber: rcNumber.trim(),
+        status: statusMap[response.status] || "pending",
+      });
+
+      setIsSubmitting(false);
+
+      // Navigate to success screen
+      router.push({
+        pathname: '/request-submitted',
+        params: {
+          verificationId: response.id || newVerification.id,
+          status: response.status
+        }
+      });
+    } catch (error: any) {
+      setIsSubmitting(false);
+      Alert.alert('Error', error.message || 'Failed to submit verification request');
+      console.error('Verification submission error:', error);
+    }
   };
 
   const handleDocumentUpload = () => {
-    // Handle document upload
     console.log('Upload document');
   };
 
@@ -110,11 +157,16 @@ export default function VerifyBusinessScreen() {
       {/* Submit Button */}
       <View style={styles.bottomContainer}>
         <TouchableOpacity 
-          style={styles.submitButton}
+          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
           onPress={handleSubmit}
+          disabled={isSubmitting}
         >
-          <Text style={styles.submitButtonText}>Submit for Review</Text>
-          <Ionicons name="arrow-forward" size={20} color="#fff" style={styles.submitArrow} />
+          <Text style={styles.submitButtonText}>
+            {isSubmitting ? 'Processing...' : 'Submit for Review'}
+          </Text>
+          {!isSubmitting && (
+            <Ionicons name="arrow-forward" size={20} color="#fff" style={styles.submitArrow} />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -159,7 +211,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 45,
     paddingBottom: 20,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
@@ -260,6 +312,7 @@ const styles = StyleSheet.create({
   documentSection: {
     marginHorizontal: 20,
     marginTop: 32,
+    marginBottom: 32
   },
   sectionLabel: {
     fontSize: 13,
@@ -319,6 +372,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#9CA3AF',
+    opacity: 0.6,
   },
   submitButtonText: {
     color: '#fff',

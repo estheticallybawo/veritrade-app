@@ -11,9 +11,12 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useVerifications } from '../contexts/VerificationContext';
 
 
 export default function HomeScreen() {
+  const { stats } = useVerifications();
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
@@ -116,12 +119,18 @@ export default function HomeScreen() {
             <Text style={styles.actionCardSubtitle}>CAC & Identity</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionCard}>
-            <View style={styles.actionIconCircleGreen}>
-              <MaterialCommunityIcons name="scan-helper" size={28} color="#fff" />
+          <TouchableOpacity 
+            style={[styles.actionCard, styles.actionCardDisabled]}
+            disabled={true}
+          >
+            <View style={styles.comingSoonBadge}>
+              <Text style={styles.comingSoonText}>COMING SOON</Text>
             </View>
-            <Text style={styles.actionCardTitle}>Scan Invoice</Text>
-            <Text style={styles.actionCardSubtitle}>OCR Fraud Detect</Text>
+            <View style={[styles.actionIconCircleGreen, styles.actionIconDisabled]}>
+              <MaterialCommunityIcons name="scan-helper" size={28} color="#A0A0A0" />
+            </View>
+            <Text style={[styles.actionCardTitle, styles.actionCardTitleDisabled]}>Scan Invoice</Text>
+            <Text style={[styles.actionCardSubtitle, styles.actionCardSubtitleDisabled]}>OCR Fraud Detect</Text>
           </TouchableOpacity>
         </View>
 
@@ -131,7 +140,7 @@ export default function HomeScreen() {
             <View style={styles.statIconCircleGreen}>
               <Ionicons name="shield-checkmark" size={20} color="#10B981" />
             </View>
-            <Text style={styles.statNumber}>1</Text>
+            <Text style={styles.statNumber}>{stats.verified}</Text>
             <Text style={styles.statLabel}>VERIFIED</Text>
           </View>
           
@@ -139,7 +148,7 @@ export default function HomeScreen() {
             <View style={styles.statIconCircleOrange}>
               <Ionicons name="time-outline" size={20} color="#F59E0B" />
             </View>
-            <Text style={styles.statNumber}>1</Text>
+            <Text style={styles.statNumber}>{stats.pending}</Text>
             <Text style={styles.statLabel}>PENDING</Text>
           </View>
           
@@ -147,7 +156,7 @@ export default function HomeScreen() {
             <View style={styles.statIconCircleRed}>
               <Ionicons name="alert-circle" size={20} color="#EF4444" />
             </View>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{stats.flagged}</Text>
             <Text style={styles.statLabel}>ALERTS</Text>
           </View>
         </View>
@@ -155,7 +164,7 @@ export default function HomeScreen() {
         {/* Recent Activity */}
         <View style={styles.recentHeader}>
           <Text style={styles.recentTitle}>RECENT ACTIVITY</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/verification-history')}>
             <Text style={styles.viewHistory}>VIEW HISTORY</Text>
           </TouchableOpacity>
         </View>
@@ -194,7 +203,7 @@ export default function HomeScreen() {
             params: {
               status: 'pending',
               entityName: 'Glow Beauty & Spa',
-              rcNumber: 'BN-112233',
+              rcNumber: 'RC742053',
               statusDate: 'FEB 19, 2026'
             }
           })}
@@ -270,7 +279,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 50,
     paddingBottom: 20,
     backgroundColor: '#fff',
   },
@@ -498,6 +507,35 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+  },
+  actionCardDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#F9FAFB',
+  },
+  comingSoonBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    zIndex: 1,
+  },
+  comingSoonText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: 0.5,
+  },
+  actionIconDisabled: {
+    backgroundColor: '#E5E7EB',
+  },
+  actionCardTitleDisabled: {
+    color: '#9CA3AF',
+  },
+  actionCardSubtitleDisabled: {
+    color: '#D1D5DB',
   },
   actionIconCircleBlue: {
     width: 56,
