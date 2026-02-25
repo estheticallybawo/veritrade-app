@@ -12,7 +12,7 @@ import {
 import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useVerifications } from '../contexts/VerificationContext';
-import { verifyBusiness } from '../data/cacDatabase';
+import { verificationService } from '../services/verification';
 
 export default function VerifyBusinessScreen() {
   const [businessName, setBusinessName] = useState('');
@@ -21,7 +21,7 @@ export default function VerifyBusinessScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addVerification } = useVerifications();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validate inputs
     if (!businessName.trim() || !rcNumber.trim()) {
       Alert.alert('Missing Information', 'Please enter both business name and RC number');
@@ -30,59 +30,45 @@ export default function VerifyBusinessScreen() {
 
     setIsSubmitting(true);
 
-    // Simulate API delay
-    setTimeout(() => {
+    try {
+      // Call backend API
+      const response = await verificationService.submit({
+        business_name: businessName.trim(),
+        registration_number: rcNumber.trim(),
+      });
 
-      // Look up in CAC database
-      const cacResult = verifyBusiness(businessName.trim(), rcNumber.trim());
+      // Add to local context for UI
+      const statusMap: { [key: number]: "pending" | "verified" | "rejected" | "flagged" } = {
+        0: "pending",
+        1: "verified",
+        2: "rejected",
+        3: "flagged"
+      };
       
-      let status: 'pending' | 'verified' | 'rejected' | 'flagged' = 'pending';
-      let cacData = undefined;
-
-      if (cacResult.found && cacResult.record) {
-        // Map CAC verification status to our status
-        if (cacResult.record.verification_status === 'VERIFIED' && cacResult.match) {
-          status = 'verified';
-        } else if (cacResult.record.verification_status === 'FLAGGED') {
-          status = 'flagged';
-        } else if (cacResult.record.verification_status === 'REJECTED' || !cacResult.match) {
-          status = 'rejected';
-        }
-
-        cacData = {
-          supplier_id: cacResult.record.supplier_id,
-          business_type: cacResult.record.business_type,
-          industry_category: cacResult.record.industry_category,
-          state: cacResult.record.state,
-          registration_date: cacResult.record.registration_date,
-          verification_status: cacResult.record.verification_status,
-          verification_reason: cacResult.reason || cacResult.record.verification_reason
-        };
-      }
-
-      // Add to verification history
       const newVerification = addVerification({
         businessName: businessName.trim(),
         registrationNumber: rcNumber.trim(),
-        status,
-        cacData
+        status: statusMap[response.status] || "pending",
       });
 
       setIsSubmitting(false);
 
-      // Navigate to success screen with verification ID
+      // Navigate to success screen
       router.push({
         pathname: '/request-submitted',
         params: {
-          verificationId: newVerification.id,
-          status: newVerification.status
+          verificationId: response.id || newVerification.id,
+          status: response.status
         }
       });
-    }, 1500); // Simulate 1.5s processing time
+    } catch (error: any) {
+      setIsSubmitting(false);
+      Alert.alert('Error', error.message || 'Failed to submit verification request');
+      console.error('Verification submission error:', error);
+    }
   };
 
   const handleDocumentUpload = () => {
-    // Handle document upload
     console.log('Upload document');
   };
 
