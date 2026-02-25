@@ -1,129 +1,109 @@
+# VeriTrade Backend
 
-# veritrade
-VeriTrade Project - WTF Capstone group 16
-# BACKEND DOCUMENTATION
-
-**Base URL:** `http://localhost:5000`  
-**Version:** 1.0.0 (MVP)
+Business Legitimacy Verification Platform for Nigerian SMEs
 
 ---
 
 ## Quick Start
+```bash
+npm install
+npm run dev
+```
 
-1. Register/Login to get JWT token
-2. Buyers submit verification requests
-3. Admins review and approve/reject/flag requests
+Server runs on `http://localhost:5000`
+
+---
+
+## Setup
+
+Create `.env` file:
+```env
+PORT=5000
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=veritrade_new_db
+JWT_SECRET=your_secret_key
+```
+
+Create database:
+```sql
+CREATE DATABASE veritrade_new_db;
+```
+
+Tables auto-create on first run. 3,500 Nigerian businesses pre-loaded.
 
 ---
 
 ## Authentication
 
-### Register
+**Register:**
 ```http
 POST /api/auth/register
-Content-Type: application/json
-
 {
   "name": "John Buyer",
   "email": "buyer@veritrade.com",
   "password": "TestPassword123",
-  "role": "buyer"  // or "admin"
+  "role": "buyer"
 }
 ```
 
-### Login
+**Login:**
 ```http
 POST /api/auth/login
-Content-Type: application/json
-
 {
   "email": "buyer@veritrade.com",
   "password": "TestPassword123"
 }
 ```
 
-**Response includes JWT token** — save it for future requests (will need auth middleware later).
+Save the JWT token from response.
 
 ---
 
 ## Buyer Endpoints
 
-### Submit Verification Request
+Include `Authorization: Bearer {token}` in all requests.
 ```http
 POST /api/verifications/submit
-Content-Type: application/json
-
 {
   "business_name": "EcoTech Solutions Ltd",
   "registration_number": "RC999988"
 }
-```
 
-### Get My Requests
-```http
 GET /api/verifications/my-requests
+GET /api/verifications/:id
+PATCH /api/verifications/:id/cancel
 ```
-
-### Get Single Request
-```http
-GET /api/verifications/1
-```
-
-### Cancel Request
-```http
-PATCH /api/verifications/1/cancel
-```
-*Only works for pending/draft requests*
 
 ---
 
 ## Admin Endpoints
 
-### Get Pending Requests
+Include `Authorization: Bearer {admin_token}` in all requests.
 ```http
 GET /api/admin/verifications/pending
-```
-
-### Get All Requests (with optional filter)
-```http
-GET /api/admin/verifications
 GET /api/admin/verifications?status=verified
-GET /api/admin/verifications?status=rejected
-```
 
-### Approve Request
-```http
-PATCH /api/admin/verifications/1/verify
-Content-Type: application/json
-
+PATCH /api/admin/verifications/:id/verify
 {
   "admin_notes": "Business verified successfully"
 }
-```
 
-### Reject Request
-```http
-PATCH /api/admin/verifications/2/reject
-Content-Type: application/json
-
+PATCH /api/admin/verifications/:id/reject
 {
-  "admin_notes": "Invalid registration number"
+  "admin_notes": "Invalid registration"
 }
-```
 
-### Flag Request
-```http
-PATCH /api/admin/verifications/3/flag
-Content-Type: application/json
-
+PATCH /api/admin/verifications/:id/flag
 {
-  "admin_notes": "Requires further investigation"
+  "admin_notes": "Needs investigation"
 }
 ```
 
 ---
 
-## Status Lifecycle
+## Status Flow
 ```
 pending → verified
         → rejected
@@ -131,46 +111,47 @@ pending → verified
         → cancelled
 ```
 
-**Rules:**
-- Only `pending` requests can be reviewed by admin
-- Only `pending` or `draft` requests can be cancelled by buyer
-- Once reviewed (verified/rejected/flagged), status cannot change
-
 ---
 
 ## Testing
 
-Use the `api-tests.http` file with REST Client extension:
-
+Use `api-tests.http` with VS Code REST Client extension:
 1. Register buyer & admin
-2. Login as buyer
-3. Submit 2-3 verification requests
-4. Login as admin (if needed)
-5. Review requests (verify/reject/flag)
-6. Test cancel feature
+2. Login → copy tokens
+3. Test all endpoints with tokens
 
 ---
 
-## Error Responses
+## Error Codes
 
 | Code | Meaning |
 |------|---------|
 | 200 | Success |
 | 201 | Created |
 | 400 | Bad Request |
+| 401 | No/Invalid Token |
+| 403 | Wrong Role |
 | 404 | Not Found |
 | 500 | Server Error |
 
 ---
 
+## Security
+
+- ✅ bcrypt password hashing
+- ✅ JWT authentication (24h expiry)
+- ✅ Role-based access (buyer/admin)
+- ✅ Protected routes
+- ✅ SQL injection protection
+
+---
+
 ## Database
 
-**3,500 Nigerian businesses** available in suppliers table for verification matching.
-
-**3 Main Tables:**
-- `users` — Buyers and Admins
-- `verification_requests` — All verification submissions
-- `suppliers` — Business registry data
+**3 Tables:**
+- `users` — Buyers & Admins
+- `verification_requests` — All submissions
+- `suppliers` — 3,500 Nigerian businesses
 
 ---
 

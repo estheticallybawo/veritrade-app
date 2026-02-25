@@ -5,7 +5,8 @@ const Supplier = require('../models/Supplier');
 const submitVerification = async (req, res) => {
   try {
     const { business_name, registration_number } = req.body;
-    const buyer_id = req.user ? req.user.id : 1; // Temporary: will use auth middleware later
+    // const buyer_id = req.user ? req.user.id : 1; // Temporary: will use auth middleware later
+    const buyer_id = req.user.id; 
 
     // Validate required fields
     if (!business_name || !registration_number) {
@@ -41,7 +42,8 @@ const submitVerification = async (req, res) => {
 // Get all verification requests for logged-in buyer
 const getMyVerifications = async (req, res) => {
   try {
-    const buyer_id = req.user ? req.user.id : 1; // Temporary
+    // const buyer_id = req.user ? req.user.id : 1; // Temporary
+    const buyer_id = req.user.id; 
 
     const verifications = await VerificationRequest.findAll({
       where: { buyer_id },
@@ -84,7 +86,8 @@ const getVerificationById = async (req, res) => {
 const cancelVerification = async (req, res) => {
   try {
     const { id } = req.params;
-    const buyer_id = req.user ? req.user.id : 1; // Temporary
+    // const buyer_id = req.user ? req.user.id : 1; // Temporary
+    const buyer_id = req.user.id; 
 
     const verification = await VerificationRequest.findOne({
       where: { id, buyer_id }

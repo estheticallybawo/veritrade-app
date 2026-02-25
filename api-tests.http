@@ -1,0 +1,172 @@
+### AUTHENTICATION TESTS
+
+### Test 1: Register Buyer
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Buyer",
+  "email": "buyer@veritrade.com",
+  "password": "TestPassword123",
+  "role": "buyer"
+}
+
+###
+
+### Test 2: Register Admin
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Admin User",
+  "email": "admin@veritrade.com",
+  "password": "AdminPassword123",
+  "role": "admin"
+}
+
+###
+
+### Test 3: Login as Buyer
+# @name loginBuyer
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "buyer@veritrade.com",
+  "password": "TestPassword123"
+}
+
+###
+
+### Test 3b: Login as Admin
+# @name loginAdmin
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@veritrade.com",
+  "password": "AdminPassword123"
+}
+
+###
+
+### BUYER ENDPOINTS (Require Buyer Role + JWT)
+
+### Test 4: Submit Verification Request
+POST http://localhost:5000/api/verifications/submit
+Content-Type: application/json
+Authorization: Bearer YOUR_BUYER_TOKEN_HERE
+
+{
+  "business_name": "EcoTech Solutions Ltd",
+  "registration_number": "RC999988"
+}
+
+###
+
+### Test 5: Get My Verification Requests
+GET http://localhost:5000/api/verifications/my-requests
+Authorization: Bearer YOUR_BUYER_TOKEN_HERE
+
+###
+
+### Test 6: Get Single Verification Request
+GET http://localhost:5000/api/verifications/1
+Authorization: Bearer YOUR_BUYER_TOKEN_HERE
+
+###
+
+### Test 7: Cancel Verification Request
+PATCH http://localhost:5000/api/verifications/6/cancel
+Authorization: Bearer YOUR_BUYER_TOKEN_HERE
+
+###
+
+### ADMIN ENDPOINTS (Require Admin Role + JWT)
+
+### Test 8: Get All Pending Verifications (Admin)
+GET http://localhost:5000/api/admin/verifications/pending
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+###
+
+### Test 9: Get All Verifications (Admin)
+GET http://localhost:5000/api/admin/verifications
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+###
+
+### Test 9b: Get Verified Verifications Only (Admin)
+GET http://localhost:5000/api/admin/verifications?status=verified
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+###
+
+### Test 10: Verify Request (Admin Approve)
+PATCH http://localhost:5000/api/admin/verifications/1/verify
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+{
+  "admin_notes": "Business verified successfully"
+}
+
+###
+
+### Test 11: Reject Request (Admin)
+PATCH http://localhost:5000/api/admin/verifications/2/reject
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+{
+  "admin_notes": "Invalid registration number"
+}
+
+###
+
+### Test 12: Flag Request (Admin)
+PATCH http://localhost:5000/api/admin/verifications/3/flag
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+{
+  "admin_notes": "Requires further investigation"
+}
+
+###
+
+### TESTING WITHOUT TOKEN (Should Fail with 401)
+
+### Test 13: Try Submitting Without Token (Should Return 401)
+POST http://localhost:5000/api/verifications/submit
+Content-Type: application/json
+
+{
+  "business_name": "Test Company",
+  "registration_number": "RC111111"
+}
+
+###
+
+### Test 14: Try Admin Action as Buyer (Should Return 403)
+PATCH http://localhost:5000/api/admin/verifications/1/verify
+Content-Type: application/json
+Authorization: Bearer YOUR_BUYER_TOKEN_HERE
+
+{
+  "admin_notes": "Trying to verify as buyer"
+}
+
+###
+
+### INSTRUCTIONS FOR TESTING
+
+# Step 1: Run Test 3 (Login as Buyer)
+# Step 2: Copy the token from the response
+# Step 3: Replace YOUR_BUYER_TOKEN_HERE with your actual token in Tests 4-7
+
+# Step 4: Run Test 3b (Login as Admin)
+# Step 5: Copy the token from the response
+# Step 6: Replace YOUR_ADMIN_TOKEN_HERE with your actual token in Tests 8-12
+
+# Tests 13-14 verify that authentication and authorization work correctly

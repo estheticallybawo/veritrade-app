@@ -48,7 +48,8 @@ const verifyRequest = async (req, res) => {
   try {
     const { id } = req.params;
     const { admin_notes } = req.body;
-    const admin_id = req.user ? req.user.id : 1; // Temporary
+    // const admin_id = req.user ? req.user.id : 1; // Temporary
+    const admin_id = req.user.id;
 
     const verification = await VerificationRequest.findByPk(id);
 
@@ -89,7 +90,8 @@ const rejectRequest = async (req, res) => {
   try {
     const { id } = req.params;
     const { admin_notes } = req.body;
-    const admin_id = req.user ? req.user.id : 1; // Temporary
+    // const admin_id = req.user ? req.user.id : 1; // Temporary
+    const admin_id = req.user.id;
 
     const verification = await VerificationRequest.findByPk(id);
 
@@ -124,7 +126,8 @@ const flagRequest = async (req, res) => {
   try {
     const { id } = req.params;
     const { admin_notes } = req.body;
-    const admin_id = req.user ? req.user.id : 1; // Temporary
+    // const admin_id = req.user ? req.user.id : 1; // Temporary
+    const admin_id = req.user.id;
 
     const verification = await VerificationRequest.findByPk(id);
 

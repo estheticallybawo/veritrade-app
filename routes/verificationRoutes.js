@@ -6,6 +6,11 @@ const {
   getVerificationById, 
   cancelVerification 
 } = require('../controllers/verificationController');
+const { authenticate, requireRole } = require('../middleware/authMiddleware');
+
+// All verification routes require authentication and BUYER role
+router.use(authenticate); // Apply to all routes below
+router.use(requireRole('buyer')); // Only buyers can access
 
 // POST /api/verifications/submit - Submit new verification request
 router.post('/submit', submitVerification);
