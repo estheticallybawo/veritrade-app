@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Change this based on environment
 const API_BASE_URL = __DEV__ 
-  ? 'http://localhost:5000/api'  // Local development
+  ? 'http://localhost:5000/api'  // Development
   : 'https://your-production-api.com/api'; // Production
 
 interface ApiResponse<T = any> {
@@ -80,6 +80,7 @@ class ApiService {
   }
 
   async post<T>(endpoint: string, body: any, requiresAuth: boolean = true) {
+    console.log('API POST:', endpoint, body);
     return this.request<T>(
       endpoint,
       {

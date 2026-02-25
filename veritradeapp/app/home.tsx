@@ -15,8 +15,7 @@ import { useVerifications } from '../contexts/VerificationContext';
 
 
 export default function HomeScreen() {
-  const { getStats } = useVerifications();
-  const stats = getStats();
+  const { stats } = useVerifications();
 
   return (
     <View style={styles.container}>

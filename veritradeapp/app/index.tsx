@@ -7,8 +7,8 @@ import {
   Dimensions
 } from 'react-native';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Import your frame images
 const frames = [
   require('../assets/splash/frame1.png'),
   require('../assets/splash/frame2.png'),
@@ -25,7 +25,7 @@ export default function SplashScreen() {
   const scaleAnim = useState(new Animated.Value(0.8))[0];
 
   useEffect(() => {
-    // Frame animation - change image every 100ms
+    // Frame animation
     const frameInterval = setInterval(() => {
       setCurrentFrame((prev) => {
         if (prev < frames.length - 1) {
@@ -50,9 +50,10 @@ export default function SplashScreen() {
       })
     ]).start();
 
-    // Navigate to home after 6 seconds
-    const timer = setTimeout(() => {
-      router.replace('/home'); // Navigate to home screen
+    // Check for token and navigate
+    const timer = setTimeout(async () => {
+      // Temporarily skip token check - always go to login
+      router.replace('/login');
     }, 6000);
 
     return () => {

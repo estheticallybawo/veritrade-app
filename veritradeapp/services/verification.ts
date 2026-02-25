@@ -21,6 +21,7 @@ export interface AdminAction {
 export const verificationService = {
   // Submit new verification request
   async submit(request: VerificationRequest) {
+     console.log('verification.ts - Calling API with:', request);
     return api.post<VerificationResponse>('/verifications/submit', request);
   },
 
