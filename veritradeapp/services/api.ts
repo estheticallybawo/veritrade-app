@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Change this based on environment
 const API_BASE_URL = __DEV__ 
   ? 'http://localhost:5000/api'  // Development
-  : 'https://your-production-api.com/api'; // Production
+  : 'https://veritrade-production.up.railway.app/api'; // Production
 
 interface ApiResponse<T = any> {
   id: string;
