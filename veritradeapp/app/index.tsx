@@ -7,7 +7,8 @@ import {
   Dimensions
 } from 'react-native';
 import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useOnboarding } from '../contexts/OnboardingContext';
+
 
 const frames = [
   require('../assets/splash/frame1.png'),
@@ -20,6 +21,7 @@ const frames = [
 const { width, height } = Dimensions.get('window');
 
 export default function SplashScreen() {
+  const { hasSeenOnboarding, setHasSeenOnboarding } = useOnboarding();
   const [currentFrame, setCurrentFrame] = useState(0);
   const fadeAnim = useState(new Animated.Value(0))[0];
   const scaleAnim = useState(new Animated.Value(0.8))[0];
@@ -52,8 +54,13 @@ export default function SplashScreen() {
 
     // Check for token and navigate
     const timer = setTimeout(async () => {
-      // Temporarily skip token check - always go to login
-      router.replace('/login');
+      // Route to onboarding if user hasn't seen it, otherwise to login
+      if (!hasSeenOnboarding) {
+        setHasSeenOnboarding(true);
+        router.replace('/onboarding');
+      } else {
+        router.replace('/login');
+      }
     }, 6000);
 
     return () => {

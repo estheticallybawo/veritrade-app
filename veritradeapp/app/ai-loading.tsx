@@ -77,6 +77,7 @@ export default function AILoadingScreen() {
       
       {/* Header */}
       <View style={styles.header}>
+
         <View style={styles.headerContent}>
           <Ionicons name="sparkles" size={20} color="#10B981" style={styles.headerIcon} />
           <Text style={styles.headerTitle}>VERIPULSE AI</Text>
@@ -148,7 +149,7 @@ export default function AILoadingScreen() {
         
         <View style={styles.navItem}>
           <Ionicons name="time-outline" size={24} color="#9CA3AF" />
-          <Text style={styles.navLabel}>REQUEST</Text>
+          <Text style={styles.navLabel}>HISTORY</Text>
         </View>
         
         <View style={styles.navItem}>

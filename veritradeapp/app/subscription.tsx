@@ -207,7 +207,7 @@ export default function SubscriptionScreen() {
         
         <TouchableOpacity style={styles.navItem}>
           <Ionicons name="time-outline" size={24} color="#9CA3AF" />
-          <Text style={styles.navLabel}>REQUEST</Text>
+          <Text style={styles.navLabel}>HISTORY</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.navItem}>

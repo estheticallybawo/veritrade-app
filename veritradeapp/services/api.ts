@@ -1,9 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Change this based on environment
-const API_BASE_URL = "https://veritrade-production.up.railway.app";
+const API_BASE_URL = 'https://veritrade-production.up.railway.app/api';
 
 interface ApiResponse<T = any> {
+  verifications: boolean;
   id: string;
   data?: T;
   error?: string;
@@ -16,19 +14,14 @@ class ApiService {
   // Set auth token
   setToken(token: string) {
     this.token = token;
-    AsyncStorage.setItem('auth_token', token);
   }
 
-  async getToken(): Promise<string | null> {
-    if (this.token) return this.token;
-    const stored = await AsyncStorage.getItem('auth_token');
-    this.token = stored;
-    return stored;
+  getToken(): string | null {
+    return this.token;
   }
 
-  async clearToken() {
+  clearToken() {
     this.token = null;
-    await AsyncStorage.removeItem('auth_token');
   }
 
   // Base request method
@@ -44,7 +37,7 @@ class ApiService {
       };
 
       if (requiresAuth) {
-        const token = await this.getToken();
+        const token = this.getToken();
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
@@ -58,6 +51,7 @@ class ApiService {
       const data = await response.json();
 
       return {
+        verifications: response.ok,
         id: Math.random().toString(36).substr(2, 9),
         data,
         status: response.status,
@@ -65,6 +59,7 @@ class ApiService {
       };
     } catch (error) {
       return {
+        verifications: false,
         id: Math.random().toString(36).substr(2, 9),
         error: error instanceof Error ? error.message : 'Network error',
         status: 500,

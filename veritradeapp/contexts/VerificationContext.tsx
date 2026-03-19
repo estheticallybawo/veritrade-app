@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { verificationService } from '../services/verification';
+import { useUser } from './UserContext';
 
 interface Verification {
   id: string;
@@ -11,8 +13,7 @@ interface Verification {
 
 interface VerificationContextType {
   verifications: Verification[];
-  addVerification: (verification: Omit<Verification, 'id' | 'submittedAt'>) => Verification;
-  updateVerification: (id: string, updates: Partial<Verification>) => void;
+  refreshVerifications: () => Promise<void>;
   stats: {
     verified: number;
     pending: number;
@@ -24,6 +25,7 @@ const VerificationContext = createContext<VerificationContextType | undefined>(u
 
 export function VerificationProvider({ children }: { children: React.ReactNode }) {
   const [verifications, setVerifications] = useState<Verification[]>([]);
+  const { user } = useUser();
 
   const stats = useMemo(() => ({
     verified: verifications.filter(v => v.status === 'verified').length,
@@ -31,24 +33,35 @@ export function VerificationProvider({ children }: { children: React.ReactNode }
     flagged: verifications.filter(v => v.status === 'flagged').length,
   }), [verifications]);
 
-  const addVerification = (verification: Omit<Verification, 'id' | 'submittedAt'>) => {
-    const newVerification: Verification = {
-      ...verification,
-      id: Date.now().toString(),
-      submittedAt: new Date(),
-    };
-    setVerifications(prev => [newVerification, ...prev]);
-    return newVerification;
+  const refreshVerifications = async () => {
+    try {
+      const response = await verificationService.getMyRequests();
+      const verificationArray = Array.isArray(response) ? response : [];
+      setVerifications(verificationArray.map((v: any) => ({
+        id: String(v.id),
+        businessName: v.business_name,
+        registrationNumber: v.registration_number,
+        status: v.status,
+        submittedAt: new Date(v.submitted_at || v.createdAt),
+        adminNotes: v.admin_notes
+      })));
+    } catch (error) {
+      console.error('Failed to refresh verifications:', error);
+      setVerifications([]);
+    }
   };
 
-  const updateVerification = (id: string, updates: Partial<Verification>) => {
-    setVerifications(prev =>
-      prev.map(v => (v.id === id ? { ...v, ...updates } : v))
-    );
-  };
+  // Load verifications when user changes
+  useEffect(() => {
+    if (user) {
+      refreshVerifications();
+    } else {
+      setVerifications([]);
+    }
+  }, [user?.email]);
 
   return (
-    <VerificationContext.Provider value={{ verifications, addVerification, updateVerification, stats }}>
+    <VerificationContext.Provider value={{ verifications, refreshVerifications, stats }}>
       {children}
     </VerificationContext.Provider>
   );

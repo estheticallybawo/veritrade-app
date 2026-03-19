@@ -12,10 +12,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useVerifications } from '../contexts/VerificationContext';
+import { useUser } from '../contexts/UserContext';
 
 
 export default function HomeScreen() {
   const { stats } = useVerifications();
+  const { user } = useUser();
+  const userName = user?.name?.split(' ')[0] || 'User';
 
   return (
     <View style={styles.container}>
@@ -24,14 +27,17 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Hi, Samuel</Text>
+          <Text style={styles.greeting}>Hi, {userName}</Text>
           <View style={styles.tierBadge}>
-            <Text style={styles.tierText}>STANDARD TIER</Text>
+            <Text style={styles.tierText}>SME Starter</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.profileButton}>
+        <TouchableOpacity 
+          style={styles.profileButton}
+          onPress={() => router.push('/profile')}
+        >
           <View style={styles.profileIcon}>
-            <Text style={styles.profileIconText}>👤</Text>
+            <Ionicons name="person-circle" size={32} color="#fff" />
           </View>
         </TouchableOpacity>
       </View>
@@ -73,12 +79,12 @@ export default function HomeScreen() {
             />
           </View>
           
-          {/* Deep Scan Account Button */}
+          {/* Deep Scan Account Button 
           <TouchableOpacity style={styles.deepScanButton}>
             <Ionicons name="flash" size={20} color="#1E3A5F" style={styles.deepScanIcon} />
             <Text style={styles.deepScanText}>Deep Scan Account</Text>
-          </TouchableOpacity>
-        </View>
+          </TouchableOpacity>*/}
+        </View> 
 
         {/* VERIPULSE AI Section */}
         <View style={styles.aiCard}>
@@ -94,14 +100,9 @@ export default function HomeScreen() {
           </Text>
           <TouchableOpacity 
             style={styles.aiButton}
-            onPress={() => router.push({
-              pathname: '/ai-loading',
-              params: {
-                businessName: 'Aliko Logistics Ltd'
-              }
-            })}
-          >
-            <Text style={styles.aiButtonText}>LAUNCH INSIGHT</Text>
+            onPress={() => router.push('/ai-loading')}>
+            <Text style={styles.aiButtonText}
+            >GET STARTED</Text>
             <Ionicons name="arrow-forward" size={16} color="#10B981" style={styles.aiArrow} />
           </TouchableOpacity>
         </View>
@@ -201,23 +202,24 @@ export default function HomeScreen() {
           onPress={() => router.push({
             pathname: '/request-detail',
             params: {
-              status: 'pending',
+              status: 'flagged',
               entityName: 'Glow Beauty & Spa',
               rcNumber: 'RC742053',
               statusDate: 'FEB 19, 2026'
+              
             }
           })}
         >
           <View style={styles.activityRow}>
-            <View style={styles.activityIconOrange}>
-              <Ionicons name="time-outline" size={24} color="#F59E0B" />
+            <View style={styles.activityIconRed}>
+              <Ionicons name="alert-circle" size={24} color="#EF4444" />
             </View>
             <View style={styles.activityContent}>
               <Text style={styles.activityName}>Glow Beauty & Spa</Text>
               <Text style={styles.activityMeta}>BN-112233 • 19 FEB 2026</Text>
             </View>
-            <View style={styles.activityStatusReview}>
-              <Text style={styles.statusReviewText}>IN REVIEW</Text>
+            <View style={styles.activityStatusFlagged}>
+              <Text style={styles.statusFlaggedText}>FLAGGED</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -246,18 +248,24 @@ export default function HomeScreen() {
         
         <TouchableOpacity 
           style={styles.navItem}
-          onPress={() => router.push('/verify-business')}
+          onPress={() => router.push('/verification-history')}
         >
           <Ionicons name="time-outline" size={24} color="#9CA3AF" />
-          <Text style={styles.navLabel}>REQUEST</Text>
+          <Text style={styles.navLabel}>HISTORY</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity 
+          style={styles.navItem}
+          onPress={() => router.push('/profile')}
+        >
           <Ionicons name="person-outline" size={24} color="#9CA3AF" />
           <Text style={styles.navLabel}>PROFILE</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity 
+          style={styles.navItem}
+          onPress={() => router.push('/settings')}
+        >
           <Ionicons name="settings-outline" size={24} color="#9CA3AF" />
           <Text style={styles.navLabel}>SETTINGS</Text>
         </TouchableOpacity>
@@ -680,6 +688,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
+  activityIconRed: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FEF2F2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   activityContent: {
     flex: 1,
   },
@@ -713,6 +730,18 @@ const styles = StyleSheet.create({
   },
   statusReviewText: {
     color: '#F59E0B',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  activityStatusFlagged: {
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  statusFlaggedText: {
+    color: '#EF4444',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,

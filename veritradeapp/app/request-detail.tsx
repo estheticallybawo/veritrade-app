@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,15 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Share
+  Share,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useVerifications } from '../contexts/VerificationContext';
+import { verificationService } from '../services/verification';
 
-type VerificationStatus = 'verified' | 'pending' | 'rejected' | 'flagged';
+type VerificationStatus = 'verified' | 'pending' | 'rejected' | 'flagged' | 'cancelled';
 type LifecycleStage = 'completed' | 'in-progress' | 'awaiting';
 
 interface LifecycleStep {
@@ -22,39 +24,81 @@ interface LifecycleStep {
 }
 
 export default function RequestDetailScreen() {
-  // Get params from navigation
+  // Get params from navigation (don't try to get from context)
   const params = useLocalSearchParams();
-  const verificationId = (params.id as string);
-  const { getVerificationById } = useVerifications();
   
-  // Get verification from context if ID provided
-  const verification = verificationId ? getVerificationById(verificationId) : null;
-  
-  const status = (verification?.status as VerificationStatus) || (params.status as VerificationStatus) || 'pending';
-  const entityName = verification?.businessName || (params.entityName as string) || 'Deji Logistics Ltd';
-  const rcNumber = verification?.registrationNumber || (params.rcNumber as string) || 'RC-982341';
-  const statusDate = (params.statusDate as string) || 'FEB 19, 2026';
+  // Use params directly - they're passed from verification-history.tsx
+  const requestId = (params.id as string) || '';
+  const initialStatus = (params.status as VerificationStatus) || 'pending';
+  const entityName = (params.entityName as string) || 'Unknown Business';
+  const rcNumber = (params.rcNumber as string) || 'RC-000000';
+  const statusDate = (params.statusDate as string) || new Date().toLocaleDateString();
+  const [currentStatus, setCurrentStatus] = useState<VerificationStatus>(initialStatus);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  console.log('Request Detail Params:', { requestId, currentStatus, entityName, rcNumber, statusDate });
 
   const lifecycleSteps: LifecycleStep[] = [
     {
       title: 'Submitted',
-      subtitle: 'Today, 10:30 AM',
+      subtitle: statusDate,
       status: 'completed',
     },
     {
       title: 'Document Verification',
-      subtitle: status === 'verified' ? 'Completed' : status === 'rejected' ? 'Failed' : status === 'flagged' ? 'In Progress' : 'In Progress',
-      status: status === 'verified' ? 'completed' : status === 'rejected' ? 'completed' : 'in-progress',
+      subtitle:
+        currentStatus === 'verified'
+          ? 'Completed'
+          : currentStatus === 'rejected'
+            ? 'Failed'
+            : currentStatus === 'flagged'
+              ? 'In Progress'
+              : currentStatus === 'cancelled'
+                ? 'Cancelled by user'
+                : 'In Progress',
+      status:
+        currentStatus === 'verified' || currentStatus === 'rejected' || currentStatus === 'cancelled'
+          ? 'completed'
+          : 'in-progress',
     },
     {
       title: 'CAC Matching',
-      subtitle: status === 'verified' ? 'Completed' : status === 'rejected' ? 'Failed' : status === 'flagged' ? 'In Progress' : 'Awaiting',
-      status: status === 'verified' ? 'completed' : status === 'rejected' ? 'completed' : 'in-progress',
+      subtitle:
+        currentStatus === 'verified'
+          ? 'Completed'
+          : currentStatus === 'rejected'
+            ? 'Failed'
+            : currentStatus === 'flagged'
+              ? 'In Progress'
+              : currentStatus === 'cancelled'
+                ? 'Not processed'
+                : 'Awaiting',
+      status:
+        currentStatus === 'verified' || currentStatus === 'rejected'
+          ? 'completed'
+          : currentStatus === 'flagged'
+            ? 'in-progress'
+            : 'awaiting',
     },
     {
       title: 'Final Trust Result',
-      subtitle: status === 'verified' ? 'Completed' : status === 'rejected' ? 'Rejected' : status === 'flagged' ? 'Flagged for Review' : 'Awaiting',
-      status: status === 'verified' ? 'completed' : status === 'rejected' || status === 'flagged' ? 'completed' : 'awaiting',
+      subtitle:
+        currentStatus === 'verified'
+          ? 'Verified'
+          : currentStatus === 'rejected'
+            ? 'Rejected'
+            : currentStatus === 'flagged'
+              ? 'Flagged for Review'
+              : currentStatus === 'cancelled'
+                ? 'Cancelled'
+                : 'Awaiting',
+      status:
+        currentStatus === 'verified' ||
+        currentStatus === 'rejected' ||
+        currentStatus === 'flagged' ||
+        currentStatus === 'cancelled'
+          ? 'completed'
+          : 'awaiting',
     },
   ];
 
@@ -68,8 +112,49 @@ export default function RequestDetailScreen() {
     }
   };
 
+  const handleCancelRequest = () => {
+    if (!requestId) {
+      Alert.alert('Unable to cancel', 'Request ID is missing for this verification.');
+      return;
+    }
+
+    Alert.alert(
+      'Cancel Pending Request',
+      'Are you sure you want to cancel this pending verification request?',
+      [
+        { text: 'Keep Request', style: 'cancel' },
+        {
+          text: 'Cancel Request',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsCancelling(true);
+              const result = await verificationService.cancel(requestId);
+
+              if (!result) {
+                throw new Error('Request not found or cannot be cancelled');
+              }
+
+              setCurrentStatus('cancelled');
+              Alert.alert('Request Cancelled', 'Your verification request has been cancelled.', [
+                {
+                  text: 'OK',
+                  onPress: () => router.replace('/verification-history'),
+                },
+              ]);
+            } catch (error: any) {
+              Alert.alert('Cancel Failed', error.message || 'Failed to cancel this request. Please try again.');
+            } finally {
+              setIsCancelling(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderStatusCard = () => {
-    if (status === 'verified') {
+    if (currentStatus === 'verified') {
       return (
         <View style={[styles.statusCard, styles.statusCardVerified]}>
           <View style={styles.statusIconCircleGreen}>
@@ -84,7 +169,7 @@ export default function RequestDetailScreen() {
       );
     }
 
-    if (status === 'flagged') {
+    if (currentStatus === 'flagged') {
       return (
         <View style={[styles.statusCard, styles.statusCardFlagged]}>
           <View style={styles.statusIconCircleOrange}>
@@ -99,7 +184,7 @@ export default function RequestDetailScreen() {
       );
     }
 
-    if (status === 'rejected') {
+    if (currentStatus === 'rejected') {
       return (
         <View style={[styles.statusCard, styles.statusCardRejected]}>
           <View style={styles.statusIconCircleRed}>
@@ -109,6 +194,21 @@ export default function RequestDetailScreen() {
           <Text style={styles.statusDate}>STATUS AS OF {statusDate}</Text>
           <Text style={styles.statusMessage}>
             "Could not find matching CAC record. Please check the details."
+          </Text>
+        </View>
+      );
+    }
+
+    if (currentStatus === 'cancelled') {
+      return (
+        <View style={[styles.statusCard, styles.statusCardCancelled]}>
+          <View style={styles.statusIconCircleGray}>
+            <Ionicons name="close-circle" size={40} color="#fff" />
+          </View>
+          <Text style={styles.statusTitle}>Cancelled</Text>
+          <Text style={styles.statusDate}>STATUS AS OF {statusDate}</Text>
+          <Text style={styles.statusMessage}>
+            "This pending request was cancelled by you before review."
           </Text>
         </View>
       );
@@ -211,14 +311,30 @@ export default function RequestDetailScreen() {
           </View>
         </View>
 
-        {/* Action Buttons - Only show for verified status */}
-        {status === 'verified' && (
+        {/* Action Buttons */}
+        {currentStatus === 'verified' && (
           <View style={styles.actionButtons}>
             <TouchableOpacity style={styles.downloadButton}>
               <Text style={styles.downloadButtonText}>Download Trust Certificate</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.viewDocButton}>
               <Text style={styles.viewDocButtonText}>View Source Document</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {currentStatus === 'pending' && (
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[styles.downloadButton, styles.cancelButton]}
+              onPress={handleCancelRequest}
+              disabled={isCancelling}
+            >
+              {isCancelling ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.downloadButtonText}>Cancel Pending Request</Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -236,7 +352,7 @@ export default function RequestDetailScreen() {
         
         <TouchableOpacity style={styles.navItem}>
           <Ionicons name="time-outline" size={24} color="#1E3A5F" />
-          <Text style={[styles.navLabel, styles.navLabelActive]}>REQUEST</Text>
+          <Text style={[styles.navLabel, styles.navLabelActive]}>HISTORY</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.navItem}>
@@ -321,6 +437,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF2F2',
     borderColor: '#FECACA',
   },
+  statusCardCancelled: {
+    backgroundColor: '#F3F4F6',
+    borderColor: '#E5E7EB',
+  },
   statusIconCircleGreen: {
     width: 80,
     height: 80,
@@ -353,6 +473,15 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  statusIconCircleGray: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#6B7280',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -501,6 +630,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+  },
+  cancelButton: {
+    backgroundColor: '#EF4444',
+    shadowColor: '#EF4444',
   },
   downloadButtonText: {
     color: '#fff',

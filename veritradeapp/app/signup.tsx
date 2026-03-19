@@ -12,65 +12,76 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons, AntDesign } from '@expo/vector-icons';
-
 import { api } from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import { setCurrentUserEmail } from '../services/verification';
 
-interface LoginResponse {
+interface SignupResponse {
   token: string;
   user: any;
+  message: string;
 }
 
-export default function LoginScreen() {
+export default function SignupScreen() {
   const { setUser } = useUser();
+  const [name, setName] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Missing Information', 'Please enter both email and password');
+  const handleSignup = async () => {
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      Alert.alert('Missing Information', 'Please fill in all required fields');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Weak Password', 'Password must be at least 6 characters');
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await api.post<LoginResponse>('/auth/login', {
+      const response = await api.post<SignupResponse>('/auth/register', {
+        name: name.trim(),
         email: email.trim(),
         password: password.trim(),
+        company_name: companyName.trim() || undefined,
+        role: 'buyer'
       }, false);
 
       if (response.data?.token) {
-        // Store token in memory only 
+        // Store token
         api.setToken(response.data.token);
         
         // Store user data
-        const userData = response.data.user || { name: 'User', email: email.trim() };
+        const userData = response.data.user || {
+          name: name.trim(),
+          email: email.trim(),
+          company_name: companyName.trim() || undefined,
+          verified_status: 'unverified'
+        };
         setUser(userData);
         
         // Set current user for mock verifications
         setCurrentUserEmail(userData.email);
         
-        console.log('Login successful:', userData);
+        console.log('Signup successful:', userData);
 
         setIsLoading(false);
-        
-        // Redirect to home
-        router.replace('/home');
+        Alert.alert('Success', 'Account created successfully!', [
+          { text: 'OK', onPress: () => router.replace('/home') }
+        ]);
       } else {
-        throw new Error(response.error || 'Login failed');
+        throw new Error(response.error || 'Signup failed');
       }
     } catch (error: any) {
       setIsLoading(false);
-      Alert.alert('Login Failed', error.message || 'Unable to log in. Please try again.');
-      console.error('Login error:', error);
+      Alert.alert('Signup Failed', error.message || 'Unable to create account. Please try again.');
+      console.error('Signup error:', error);
     }
-  };
-
-  const handleSignUp = () => {
-    router.push('/signup');
   };
 
   return (
@@ -86,15 +97,49 @@ export default function LoginScreen() {
           <View style={styles.iconContainer}>
             <Ionicons name="shield-checkmark" size={40} color="#fff" />
           </View>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Verify legitimacy, transact with trust.</Text>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Join Africa's trusted SME network.</Text>
+        </View>
+
+        {/* Full Name Input */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Full Name</Text>
+          <View style={styles.inputContainer}>
+            <Ionicons name="person-outline" size={20} color="#9CA3AF" />
+            <TextInput
+              style={styles.input}
+              placeholder="John Doe"
+              placeholderTextColor="#9CA3AF"
+              value={name}
+              onChangeText={setName}
+              editable={!isLoading}
+              autoCapitalize="words"
+            />
+          </View>
+        </View>
+
+        {/* Company Name Input (Optional) */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Company Name</Text>
+          <View style={styles.inputContainer}>
+            <Ionicons name="business-outline" size={20} color="#9CA3AF" />
+            <TextInput
+              style={styles.input}
+              placeholder="Aliko Logistics Ltd"
+              placeholderTextColor="#9CA3AF"
+              value={companyName}
+              onChangeText={setCompanyName}
+              editable={!isLoading}
+              autoCapitalize="words"
+            />
+          </View>
         </View>
 
         {/* Email Input */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Business Email</Text>
           <View style={styles.inputContainer}>
-            <Ionicons name="mail" size={20} color="#9CA3AF" />
+            <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
             <TextInput
               style={styles.input}
               placeholder="name@company.com"
@@ -110,14 +155,9 @@ export default function LoginScreen() {
 
         {/* Password Input */}
         <View style={styles.inputGroup}>
-          <View style={styles.passwordHeader}>
-            <Text style={styles.label}>Password</Text>
-            <TouchableOpacity>
-              <Text style={styles.forgotPassword}>Forgot password?</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.label}>Password</Text>
           <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed" size={20} color="#9CA3AF" />
+            <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />
             <TextInput
               style={styles.input}
               placeholder="••••••••"
@@ -129,7 +169,7 @@ export default function LoginScreen() {
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Ionicons 
-                name={showPassword ? 'eye' : 'eye-off'} 
+                name={showPassword ? 'eye-outline' : 'eye-off-outline'} 
                 size={20} 
                 color="#9CA3AF" 
               />
@@ -137,17 +177,17 @@ export default function LoginScreen() {
           </View>
         </View>
 
-        {/* Sign In Button */}
+        {/* Sign Up Button */}
         <TouchableOpacity 
-          style={[styles.signInButton, isLoading && { opacity: 0.6 }]}
-          onPress={handleLogin}
+          style={[styles.signUpButton, isLoading && { opacity: 0.6 }]}
+          onPress={handleSignup}
           disabled={isLoading}
         >
           {isLoading ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <>
-              <Text style={styles.signInText}>Sign in to VeriTrade</Text>
+              <Text style={styles.signUpText}>Sign up to VeriTrade</Text>
               <Ionicons name="chevron-forward" size={20} color="#fff" />
             </>
           )}
@@ -156,21 +196,24 @@ export default function LoginScreen() {
         {/* Divider */}
         <View style={styles.divider}>
           <View style={styles.line} />
-          <Text style={styles.dividerText}>Or continue with</Text>
+          <Text style={styles.dividerText}>Or sign up with</Text>
           <View style={styles.line} />
         </View>
 
-        {/* Google Sign In */}
+        {/* Google Sign Up */}
         <TouchableOpacity style={styles.googleButton} disabled={isLoading}>
           <AntDesign name="google" size={20} color="#4285F4" />
           <Text style={styles.googleText}>Sign in with your Google Account</Text>
         </TouchableOpacity>
 
-        {/* Sign Up Link */}
-        <View style={styles.signUpContainer}>
-          <Text style={styles.signUpText}>New to VeriTrade? </Text>
-          <TouchableOpacity onPress={handleSignUp} disabled={isLoading}>
-            <Text style={styles.signUpLink}>Create Account</Text>
+        {/* Sign In Link */}
+        <View style={styles.signInContainer}>
+          <Text style={styles.signInText}>Already have an account? </Text>
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            disabled={isLoading}
+          >
+            <Text style={styles.signInLink}>Sign In</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -212,7 +255,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   inputGroup: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   label: {
     fontSize: 14,
@@ -236,18 +279,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1F2937',
   },
-  passwordHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  forgotPassword: {
-    fontSize: 12,
-    color: '#6B7280',
-    textDecorationLine: 'underline',
-  },
-  signInButton: {
+  signUpButton: {
     flexDirection: 'row',
     backgroundColor: '#1E3A5F',
     borderRadius: 12,
@@ -258,7 +290,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 24,
   },
-  signInText: {
+  signUpText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
@@ -297,18 +329,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1F2937',
   },
-  signUpContainer: {
+  signInContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
     marginBottom: 40,
   },
-  signUpText: {
+  signInText: {
     fontSize: 14,
     color: '#6B7280',
   },
-  signUpLink: {
+  signInLink: {
     fontSize: 14,
     fontWeight: '600',
     color: '#1E3A5F',

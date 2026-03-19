@@ -1,18 +1,68 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  StatusBar
+  StatusBar,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useVerifications } from '../contexts/VerificationContext';
+import { verificationService } from '../services/verification';
 
 export default function VerificationHistoryScreen() {
-  const { verifications } = useVerifications();
+  const [verifications, setVerifications] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchVerifications = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await verificationService.getMyRequests();
+      const responseObj = response as any;
+      
+      // Log everything to see exact structure
+      console.log('=== FULL RESPONSE ===');
+      console.log('Type:', typeof response);
+      console.log('Response:', response);
+      console.log('Response keys:', Object.keys(response || {}));
+      console.log('Response.data:', responseObj?.data);
+      console.log('Response.verifications:', responseObj?.verifications);
+      console.log('=== END ===');
+      
+      // Handle different response structures
+      let verificationArray = [];
+      
+      if (Array.isArray(response)) {
+        verificationArray = response;
+      } else if (typeof response === 'object' && response !== null && 'data' in response) {
+        if (responseObj.data && Array.isArray(responseObj.data)) {
+          verificationArray = responseObj.data;
+        } else if (responseObj.verifications && Array.isArray(responseObj.verifications)) {
+          verificationArray = responseObj.verifications;
+        } else if (responseObj.data?.verifications && Array.isArray(responseObj.data.verifications)) {
+          verificationArray = responseObj.data.verifications;
+        }
+      }
+
+      console.log('Parsed verifications:', verificationArray);
+      setVerifications(verificationArray);
+    } catch (error: any) {
+      console.error('Failed to fetch verifications:', error);
+      Alert.alert('Error', 'Failed to load verification history');
+      setVerifications([]); // Set empty array on error
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchVerifications();
+    }, [fetchVerifications])
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -24,6 +74,8 @@ export default function VerificationHistoryScreen() {
         return '#EF4444';
       case 'flagged':
         return '#EF4444';
+      case 'cancelled':
+        return '#6B7280';
       default:
         return '#9CA3AF';
     }
@@ -39,6 +91,8 @@ export default function VerificationHistoryScreen() {
         return 'close-circle';
       case 'flagged':
         return 'alert-circle';
+      case 'cancelled':
+        return 'close-circle';
       default:
         return 'help-circle';
     }
@@ -54,6 +108,15 @@ export default function VerificationHistoryScreen() {
     return date.toLocaleDateString('en-US', options).toUpperCase();
   };
 
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#1E3A5F" />
+        <Text style={{ marginTop: 16, color: '#666' }}>Loading history...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
@@ -67,7 +130,12 @@ export default function VerificationHistoryScreen() {
           <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Verification History</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity 
+          style={styles.placeholder}
+          onPress={fetchVerifications}
+        >
+          <Ionicons name="refresh" size={24} color="#1A1A1A" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView 
@@ -108,9 +176,9 @@ export default function VerificationHistoryScreen() {
                 params: {
                   id: verification.id,
                   status: verification.status,
-                  entityName: verification.businessName,
-                  rcNumber: verification.registrationNumber,
-                  statusDate: formatDate(verification.submittedDate)
+                  entityName: verification.business_name,
+                  rcNumber: verification.registration_number,
+                  statusDate: formatDate(verification.createdAt || verification.submitted_at)
                 }
               })}
             >
@@ -126,23 +194,19 @@ export default function VerificationHistoryScreen() {
                     {verification.status.toUpperCase()}
                   </Text>
                 </View>
-                <Text style={styles.verificationId}>{verification.id}</Text>
+                <Text style={styles.verificationId}>#{verification.id}</Text>
               </View>
 
               {/* Business Info */}
-              <Text style={styles.businessName}>{verification.businessName}</Text>
-              <Text style={styles.rcNumber}>{verification.registrationNumber}</Text>
+              <Text style={styles.businessName}>{verification.business_name}</Text>
+              <Text style={styles.rcNumber}>{verification.registration_number}</Text>
 
-              {/* CAC Info if verified */}
-              {verification.cacData && (
+              {/* Admin Notes if present */}
+              {verification.admin_notes && (
                 <View style={styles.cacInfo}>
                   <View style={styles.cacRow}>
-                    <Ionicons name="business-outline" size={14} color="#666" />
-                    <Text style={styles.cacText}>{verification.cacData.business_type}</Text>
-                  </View>
-                  <View style={styles.cacRow}>
-                    <Ionicons name="location-outline" size={14} color="#666" />
-                    <Text style={styles.cacText}>{verification.cacData.state}</Text>
+                    <Ionicons name="information-circle-outline" size={14} color="#666" />
+                    <Text style={styles.cacText}>{verification.admin_notes}</Text>
                   </View>
                 </View>
               )}
@@ -151,7 +215,7 @@ export default function VerificationHistoryScreen() {
               <View style={styles.dateContainer}>
                 <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
                 <Text style={styles.dateText}>
-                  Submitted: {formatDate(verification.submittedDate)}
+                  Submitted: {formatDate(verification.createdAt || verification.submitted_at)}
                 </Text>
               </View>
 
@@ -179,12 +243,16 @@ export default function VerificationHistoryScreen() {
           <Text style={[styles.navLabel, styles.navLabelActive]}>HISTORY</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem}
+         onPress={() => router.push('/profile')}
+        >
           <Ionicons name="person-outline" size={24} color="#9CA3AF" />
           <Text style={styles.navLabel}>PROFILE</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem}
+         onPress={() => router.push('/settings')}
+        >
           <Ionicons name="settings-outline" size={24} color="#9CA3AF" />
           <Text style={styles.navLabel}>SETTINGS</Text>
         </TouchableOpacity>
@@ -351,30 +419,31 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
     backgroundColor: '#fff',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingBottom: 24,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: '#E5E7EB',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 10,
   },
   navItem: {
-    flex: 1,
     alignItems: 'center',
-    gap: 4,
   },
   navLabel: {
     fontSize: 10,
-    fontWeight: '600',
     color: '#9CA3AF',
-    letterSpacing: 0.5,
+    marginTop: 4,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   navLabelActive: {
     color: '#1E3A5F',
+    fontWeight: '700',
   },
 });

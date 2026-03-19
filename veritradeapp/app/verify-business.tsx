@@ -19,7 +19,7 @@ export default function VerifyBusinessScreen() {
   const [rcNumber, setRcNumber] = useState('');
   const [document, setDocument] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { addVerification } = useVerifications();
+  const { refreshVerifications } = useVerifications();
 
   const handleSubmit = async () => {
     console.log('=== SUBMIT STARTED ===');
@@ -40,19 +40,9 @@ export default function VerifyBusinessScreen() {
       });
 
       console.log('Response received:', response);
-      // Add to local context for UI
-      const statusMap: { [key: number]: "pending" | "verified" | "rejected" | "flagged" } = {
-        0: "pending",
-        1: "verified",
-        2: "rejected",
-        3: "flagged"
-      };
       
-      const newVerification = addVerification({
-        businessName: businessName.trim(),
-        registrationNumber: rcNumber.trim(),
-        status: statusMap[response.status] || "pending",
-      });
+      // Refresh verifications from service (per-user isolated)
+      await refreshVerifications();
 
       setIsSubmitting(false);
 
@@ -60,7 +50,7 @@ export default function VerifyBusinessScreen() {
       router.push({
         pathname: '/request-submitted',
         params: {
-          verificationId: response.id || newVerification.id,
+          verificationId: response.id,
           status: response.status
         }
       });
@@ -182,7 +172,7 @@ export default function VerifyBusinessScreen() {
         
         <TouchableOpacity style={styles.navItem}>
           <Ionicons name="time-outline" size={24} color="#1E3A5F" />
-          <Text style={[styles.navLabel, styles.navLabelActive]}>REQUEST</Text>
+          <Text style={[styles.navLabel, styles.navLabelActive]}>HISTORY</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.navItem}>

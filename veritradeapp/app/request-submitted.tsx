@@ -94,7 +94,7 @@ export default function RequestSubmittedScreen() {
         
         <TouchableOpacity style={styles.navItem}>
           <Ionicons name="time-outline" size={24} color="#1E3A5F" />
-          <Text style={[styles.navLabel, styles.navLabelActive]}>REQUEST</Text>
+          <Text style={[styles.navLabel, styles.navLabelActive]}>HISTORY</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.navItem}>

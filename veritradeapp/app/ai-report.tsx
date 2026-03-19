@@ -260,17 +260,22 @@ export default function AIReportScreen() {
           <Text style={[styles.navLabel, styles.navLabelActive]}>HOME</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity 
+        style={styles.navItem}
+        onPress={() => router.push('/verification-history')}
+        >
           <Ionicons name="time-outline" size={24} color="#9CA3AF" />
-          <Text style={styles.navLabel}>REQUEST</Text>
+          <Text style={styles.navLabel}>HISTORY</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem}
+          onPress={() => router.push('/profile')}>
           <Ionicons name="person-outline" size={24} color="#9CA3AF" />
           <Text style={styles.navLabel}>PROFILE</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem}
+          onPress={() => router.push('/settings')}>
           <Ionicons name="settings-outline" size={24} color="#9CA3AF" />
           <Text style={styles.navLabel}>SETTINGS</Text>
         </TouchableOpacity>

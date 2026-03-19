@@ -4,36 +4,52 @@
     "slug": "veritradeapp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/veritrade.png",
     "scheme": "veritradeapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-
     "ios": {
       "supportsTablet": true
     },
-
     "android": {
-      "package": "com.iveey.veritradeapp"
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/veritrade_foreground.png",
+        "backgroundImage": "./assets/images/veritrade_background.png",
+        "monochromeImage": "./assets/images/veritrade_monochrome.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.esthetically.veritradeapp"
     },
-
     "web": {
-      "output": "static"
+      "output": "static",
+      "favicon": "./assets/images/veritrade.png"
     },
-
-    "plugins": [],
-
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/veritrade.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
-
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "e212e87a-dc5d-430a-97d7-e5444356ebd8"
+        "projectId": "07685cd0-7d4d-4c93-85a0-7e4ae19a3378"
       }
     }
   }
 }
-
