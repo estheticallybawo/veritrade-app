@@ -22,7 +22,7 @@ Veritrade is a React Native application built with Expo that enables users to:
 - Subscription management UI
 - Service layer architecture with API client
 - Token-based authentication
-- AsyncStorage session persistence
+
 
 ###  Ready for Backend Integration
 - API services are fully built and configured
@@ -46,7 +46,6 @@ Veritrade is a React Native application built with Expo that enables users to:
 - **Icons**: Expo Vector Icons (Ionicons, Material Community Icons)
 - **Animations**: React Native Animated API
 - **Styling**: StyleSheet (React Native)
-- **Storage**: AsyncStorage for token persistence
 - **HTTP Client**: Fetch API with custom service layer
 - **State Management**: React Context API + Service Layer
 
@@ -99,7 +98,6 @@ Authentication screen with:
 - Show/hide password toggle
 - Form validation
 - Token-based authentication
-- AsyncStorage integration for session persistence
 - Auto-redirect to home on successful login
 - Error handling with user feedback
 
@@ -211,7 +209,6 @@ Request Detail
 ### Authentication & Session Management
 - Email/password login system
 - Token-based authentication
-- Secure token storage with AsyncStorage
 - Session persistence across app restarts
 - Auto-redirect based on authentication state
 
@@ -372,7 +369,7 @@ The app uses a hybrid approach combining React Context API with a service layer 
 This architecture separates concerns between:
 - **UI State** (Context API) - Local component state and UI-specific data
 - **API Communication** (Services) - Backend integration and data fetching
-- **Persistent Storage** (AsyncStorage) - Token and user session data
+
 
 ### Future Enhancement
 The app can easily integrate with Redux, Zustand, or other state management solutions for more complex data flows if needed.
@@ -610,7 +607,6 @@ For issues or questions, contact the development team or create an issue on the 
 - AI-powered intelligence reports with loading states
 - Subscription tier management UI
 - Full service layer implementation (API client, auth, verification)
-- Token-based authentication with AsyncStorage
 - Mock CAC database for development
 - Stack navigation with Expo Router
 - Comprehensive error handling and loading states
