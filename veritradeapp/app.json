@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "veritradeapp",
-    "slug": "veritradeapp",
+    "slug": "veritrade-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/veritrade.png",
@@ -48,7 +48,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "07685cd0-7d4d-4c93-85a0-7e4ae19a3378"
+        "projectId": "c278e954-e3cc-4f00-8757-4823942aafe8"
       }
     },
     "owner": "esthetically"
