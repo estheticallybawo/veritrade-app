@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   StatusBar,
   Alert,
-  Switch
+  Switch,
+  Platform
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,19 +22,32 @@ export default function SettingsScreen() {
   const [emailAlerts, setEmailAlerts] = useState(true);
 
   const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: () => {
-          api.clearToken();
-          clearUser();
-          setCurrentUserEmail(null);
-          router.replace('/login');
-        }
+    const performLogout = () => {
+      // Clear authentication state
+      api.clearToken();
+      clearUser();
+      setCurrentUserEmail(null);
+      // Navigate to login - works on both web and native
+      router.replace('/login');
+    };
+
+    // Use platform-specific confirmation
+    if (Platform.OS === 'web') {
+      // Use browser confirm for web
+      if (window.confirm('Are you sure you want to sign out?')) {
+        performLogout();
       }
-    ]);
+    } else {
+      // Use native Alert for mobile
+      Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: performLogout
+        }
+      ]);
+    }
   };
 
   const handleSwitchToAdmin = () => {

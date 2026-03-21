@@ -12,32 +12,37 @@ import {
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { verificationService } from '../services/verification';
+import { reportService } from '../services/report';
+
+interface HistoryItem {
+  id: string | number;
+  type: 'verification' | 'report';
+  business_name: string;
+  registration_number?: string;
+  status: string;
+  submitted_at: string;
+  categories?: string[];
+  description?: string;
+  admin_notes?: string;
+}
 
 export default function VerificationHistoryScreen() {
-  const [verifications, setVerifications] = useState<any[]>([]);
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
-  const fetchVerifications = useCallback(async () => {
+  const fetchAllHistory = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await verificationService.getMyRequests();
-      const responseObj = response as any;
       
-      // Log everything to see exact structure
-      console.log('=== FULL RESPONSE ===');
-      console.log('Type:', typeof response);
-      console.log('Response:', response);
-      console.log('Response keys:', Object.keys(response || {}));
-      console.log('Response.data:', responseObj?.data);
-      console.log('Response.verifications:', responseObj?.verifications);
-      console.log('=== END ===');
+      // Fetch verifications
+      const verificationResponse = await verificationService.getMyRequests();
+      const responseObj = verificationResponse as any;
       
-      // Handle different response structures
-      let verificationArray = [];
-      
-      if (Array.isArray(response)) {
-        verificationArray = response;
-      } else if (typeof response === 'object' && response !== null && 'data' in response) {
+      let verificationArray: any[] = [];
+      if (Array.isArray(verificationResponse)) {
+        verificationArray = verificationResponse;
+      } else if (typeof verificationResponse === 'object' && verificationResponse !== null && 'data' in verificationResponse) {
         if (responseObj.data && Array.isArray(responseObj.data)) {
           verificationArray = responseObj.data;
         } else if (responseObj.verifications && Array.isArray(responseObj.verifications)) {
@@ -47,12 +52,52 @@ export default function VerificationHistoryScreen() {
         }
       }
 
-      console.log('Parsed verifications:', verificationArray);
-      setVerifications(verificationArray);
+      // Load reports - use try-catch to handle potential errors
+      let fetchedReports: any[] = [];
+      try {
+        fetchedReports = await reportService.getMyReports();
+      } catch (reportError) {
+        console.error('Error fetching reports:', reportError);
+        fetchedReports = [];
+      }
+
+      // Convert verifications to history items
+      const verificationItems: HistoryItem[] = verificationArray.map((v: any) => ({
+        id: v.id,
+        type: 'verification',
+        business_name: v.business_name,
+        registration_number: v.registration_number,
+        status: v.status,
+        submitted_at: v.submitted_at || v.createdAt,
+        admin_notes: v.admin_notes,
+      }));
+
+      // Convert reports to history items
+      const reportItems: HistoryItem[] = (fetchedReports || []).map((r: any) => ({
+        id: r.id,
+        type: 'report',
+        business_name: r.business_name,
+        registration_number: r.registration_number,
+        status: 'submitted',
+        submitted_at: r.submitted_at,
+        categories: r.additional_categories ? [r.category, ...r.additional_categories] : [r.category],
+        description: r.description,
+      }));
+
+      // Combine and sort by date (newest first)
+      const combined = [...verificationItems, ...reportItems];
+      combined.sort((a, b) => {
+        const dateA = new Date(a.submitted_at).getTime();
+        const dateB = new Date(b.submitted_at).getTime();
+        return dateB - dateA;
+      });
+
+      setHistoryItems(combined);
+      setHasLoadedOnce(true);
     } catch (error: any) {
-      console.error('Failed to fetch verifications:', error);
-      Alert.alert('Error', 'Failed to load verification history');
-      setVerifications([]); // Set empty array on error
+      console.error('Failed to fetch history:', error);
+      setHistoryItems([]);
+      setHasLoadedOnce(true);
     } finally {
       setIsLoading(false);
     }
@@ -60,11 +105,22 @@ export default function VerificationHistoryScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchVerifications();
-    }, [fetchVerifications])
+      // Load data only on first visit
+      if (!hasLoadedOnce) {
+        fetchAllHistory();
+      }
+    }, [hasLoadedOnce, fetchAllHistory])
   );
 
-  const getStatusColor = (status: string) => {
+  const handleRefresh = useCallback(async () => {
+    setHasLoadedOnce(false);
+    await fetchAllHistory();
+  }, [fetchAllHistory]);
+
+  const getStatusColor = (status: string, type: string) => {
+    if (type === 'report') {
+      return '#0B78F5'; // Blue for reports
+    }
     switch (status) {
       case 'verified':
         return '#10B981';
@@ -76,12 +132,17 @@ export default function VerificationHistoryScreen() {
         return '#EF4444';
       case 'cancelled':
         return '#6B7280';
+      case 'submitted':
+        return '#0B78F5';
       default:
         return '#9CA3AF';
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string, type: string) => {
+    if (type === 'report') {
+      return 'alert-circle';
+    }
     switch (status) {
       case 'verified':
         return 'checkmark-circle';
@@ -93,9 +154,15 @@ export default function VerificationHistoryScreen() {
         return 'alert-circle';
       case 'cancelled':
         return 'close-circle';
+      case 'submitted':
+        return 'alert-circle';
       default:
         return 'help-circle';
     }
+  };
+
+  const getTypeLabel = (type: string) => {
+    return type === 'report' ? 'REPORT' : 'VERIFICATION';
   };
 
   const formatDate = (dateString: string) => {
@@ -132,7 +199,7 @@ export default function VerificationHistoryScreen() {
         <Text style={styles.headerTitle}>Verification History</Text>
         <TouchableOpacity 
           style={styles.placeholder}
-          onPress={fetchVerifications}
+          onPress={handleRefresh}
         >
           <Ionicons name="refresh" size={24} color="#1A1A1A" />
         </TouchableOpacity>
@@ -145,12 +212,12 @@ export default function VerificationHistoryScreen() {
         {/* Total Count */}
         <View style={styles.countContainer}>
           <Text style={styles.countText}>
-            {verifications.length} Total Request{verifications.length !== 1 ? 's' : ''}
+            {historyItems.length} Total Request{historyItems.length !== 1 ? 's' : ''}
           </Text>
         </View>
 
-        {/* Verification List */}
-        {verifications.length === 0 ? (
+        {/* History List */}
+        {historyItems.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconCircle}>
               <Ionicons name="document-text-outline" size={48} color="#9CA3AF" />
@@ -167,46 +234,72 @@ export default function VerificationHistoryScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          verifications.map((verification) => (
+          historyItems.map((item) => (
             <TouchableOpacity
-              key={verification.id}
+              key={item.id}
               style={styles.verificationCard}
-              onPress={() => router.push({
-                pathname: '/request-detail',
-                params: {
-                  id: verification.id,
-                  status: verification.status,
-                  entityName: verification.business_name,
-                  rcNumber: verification.registration_number,
-                  statusDate: formatDate(verification.createdAt || verification.submitted_at)
+              onPress={() => {
+                if (item.type === 'verification') {
+                  router.push({
+                    pathname: '/request-detail',
+                    params: {
+                      id: item.id,
+                      status: item.status,
+                      entityName: item.business_name,
+                      rcNumber: item.registration_number,
+                      statusDate: formatDate(item.submitted_at)
+                    }
+                  });
+                } else if (item.type === 'report') {
+                  router.push({
+                    pathname: '/report-submitted',
+                    params: {
+                      reportId: item.id,
+                      businessName: item.business_name,
+                      categories: item.categories ? item.categories.join(', ') : ''
+                    }
+                  });
                 }
-              })}
+              }}
             >
               {/* Status Badge */}
               <View style={styles.cardHeader}>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(verification.status) + '20' }]}>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status, item.type) + '20' }]}>
                   <Ionicons 
-                    name={getStatusIcon(verification.status)} 
+                    name={getStatusIcon(item.status, item.type)} 
                     size={16} 
-                    color={getStatusColor(verification.status)} 
+                    color={getStatusColor(item.status, item.type)} 
                   />
-                  <Text style={[styles.statusText, { color: getStatusColor(verification.status) }]}>
-                    {verification.status.toUpperCase()}
+                  <Text style={[styles.statusText, { color: getStatusColor(item.status, item.type) }]}>
+                    {getTypeLabel(item.type)}
                   </Text>
                 </View>
-                <Text style={styles.verificationId}>#{verification.id}</Text>
+                <Text style={styles.verificationId}>#{item.id}</Text>
               </View>
 
               {/* Business Info */}
-              <Text style={styles.businessName}>{verification.business_name}</Text>
-              <Text style={styles.rcNumber}>{verification.registration_number}</Text>
+              <Text style={styles.businessName}>{item.business_name}</Text>
+              {item.registration_number && (
+                <Text style={styles.rcNumber}>{item.registration_number}</Text>
+              )}
+
+              {/* Categories for reports */}
+              {item.type === 'report' && item.categories && item.categories.length > 0 && (
+                <View style={styles.categoriesContainer}>
+                  {item.categories.map((category, idx) => (
+                    <View key={idx} style={styles.categoryBadge}>
+                      <Text style={styles.categoryText}>{category}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
 
               {/* Admin Notes if present */}
-              {verification.admin_notes && (
+              {item.admin_notes && (
                 <View style={styles.cacInfo}>
                   <View style={styles.cacRow}>
                     <Ionicons name="information-circle-outline" size={14} color="#666" />
-                    <Text style={styles.cacText}>{verification.admin_notes}</Text>
+                    <Text style={styles.cacText}>{item.admin_notes}</Text>
                   </View>
                 </View>
               )}
@@ -215,7 +308,7 @@ export default function VerificationHistoryScreen() {
               <View style={styles.dateContainer}>
                 <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
                 <Text style={styles.dateText}>
-                  Submitted: {formatDate(verification.createdAt || verification.submitted_at)}
+                  Submitted: {formatDate(item.submitted_at)}
                 </Text>
               </View>
 
@@ -347,6 +440,25 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#666',
     marginBottom: 12,
+  },
+  categoriesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  categoryBadge: {
+    backgroundColor: '#E0F2FE',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#0B78F5',
+  },
+  categoryText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#0B78F5',
   },
   cacInfo: {
     flexDirection: 'row',

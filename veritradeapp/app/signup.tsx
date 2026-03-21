@@ -71,16 +71,17 @@ export default function SignupScreen() {
         console.log('Signup successful:', userData);
 
         setIsLoading(false);
-        Alert.alert('Success', 'Account created successfully!', [
-          { text: 'OK', onPress: () => router.replace('/home') }
-        ]);
+        // Navigate directly to home - works on both mobile and web
+        router.replace('/home');
       } else {
         throw new Error(response.error || 'Signup failed');
       }
     } catch (error: any) {
       setIsLoading(false);
-      Alert.alert('Signup Failed', error.message || 'Unable to create account. Please try again.');
-      console.error('Signup error:', error);
+      // On web, use console for errors since Alert doesn't work reliably
+      const errorMessage = error.message || 'Unable to create account. Please try again.';
+      console.error('Signup error:', errorMessage);
+      Alert.alert('Signup Failed', errorMessage);
     }
   };
 
