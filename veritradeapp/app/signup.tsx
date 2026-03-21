@@ -67,8 +67,7 @@ export default function SignupScreen() {
         
         // Set current user for mock verifications
         setCurrentUserEmail(userData.email);
-        
-        console.log('Signup successful:', userData);
+        // ✓ Signup successful - not logging sensitive data (email/token)
 
         setIsLoading(false);
         // Navigate directly to home - works on both mobile and web
@@ -78,6 +77,7 @@ export default function SignupScreen() {
       }
     } catch (error: any) {
       setIsLoading(false);
+
       // On web, use console for errors since Alert doesn't work reliably
       const errorMessage = error.message || 'Unable to create account. Please try again.';
       console.error('Signup error:', errorMessage);

@@ -74,8 +74,10 @@ export default function SubscriptionScreen() {
   ];
 
   const handleUpgrade = (planId: string) => {
+    if (process.env.NODE_ENV === 'development') {
     console.log('Upgrading to:', planId);
-    // Handle upgrade logic
+    } else {
+    console.log('Upgrading to:');}
   };
 
   return (

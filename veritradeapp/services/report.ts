@@ -65,8 +65,8 @@ class ReportService {
       
       mockReports.push(newReport);
       saveMockReports(mockReports);
-      
-      console.log('Mock report submitted:', newReport);
+
+      // ✓ Report submitted - not logging sensitive data
       return newReport;
     }
 

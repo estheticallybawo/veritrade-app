@@ -22,24 +22,25 @@ export default function VerifyBusinessScreen() {
   const { refreshVerifications } = useVerifications();
 
   const handleSubmit = async () => {
-    console.log('=== SUBMIT STARTED ===');
+    // Verification submission started - not logging business details
     
-    if (!businessName.trim() || !rcNumber.trim()) {
-      Alert.alert('Missing Information', 'Please enter both business name and RC number');
-      return;
-    }
+if (!businessName.trim() || !rcNumber.trim()) {
+  Alert.alert('Missing Information', 'Please enter both business name and RC number');
+  return;
+}
 
-    console.log('Submitting:', { businessName, rcNumber });
-    setIsSubmitting(true);
+// Not logging business details for security
+setIsSubmitting(true);
 
-    try {
-      console.log('Calling verificationService.submit...');
-      const response = await verificationService.submit({
-        business_name: businessName.trim(),
-        registration_number: rcNumber.trim(),
-      });
+try {
+  // Calling verification service
+  const response = await verificationService.submit({
+    business_name: businessName.trim(),
+    registration_number: rcNumber.trim(),
+  });
 
-      console.log('Response received:', response);
+  // Verification submitted successfully - not logging response data
+    
       
       // Refresh verifications from service (per-user isolated)
       await refreshVerifications();

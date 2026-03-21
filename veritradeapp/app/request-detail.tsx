@@ -36,7 +36,7 @@ export default function RequestDetailScreen() {
   const [currentStatus, setCurrentStatus] = useState<VerificationStatus>(initialStatus);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  console.log('Request Detail Params:', { requestId, currentStatus, entityName, rcNumber, statusDate });
+  // ✓ Not logging request details - contains sensitive business info
 
   const lifecycleSteps: LifecycleStep[] = [
     {
