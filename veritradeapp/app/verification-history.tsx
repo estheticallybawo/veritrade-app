@@ -165,6 +165,12 @@ export default function VerificationHistoryScreen() {
     return type === 'report' ? 'REPORT' : 'VERIFICATION';
   };
 
+  const getStatusLabel = (type: string, status: string) => {
+    const typeLabel = getTypeLabel(type);
+    const statusLabel = status.toUpperCase();
+    return `${typeLabel} - ${statusLabel}`;
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const options: Intl.DateTimeFormatOptions = { 
@@ -271,7 +277,7 @@ export default function VerificationHistoryScreen() {
                     color={getStatusColor(item.status, item.type)} 
                   />
                   <Text style={[styles.statusText, { color: getStatusColor(item.status, item.type) }]}>
-                    {getTypeLabel(item.type)}
+                    {getStatusLabel(item.type, item.status)}
                   </Text>
                 </View>
                 <Text style={styles.verificationId}>#{item.id}</Text>
