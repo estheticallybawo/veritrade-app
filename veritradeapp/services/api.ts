@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://veritrade-production.up.railway.app/api';
+const API_BASE_URL = 'https://veritradebackend.onrender.com/api';
 
 interface ApiResponse<T = any> {
   verifications: boolean;
