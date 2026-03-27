@@ -53,7 +53,7 @@ export default function LoginScreen() {
         // Set current user for mock verifications
         setCurrentUserEmail(userData.email);
         
-        console.log('Login successful:', userData);
+        // ✓ Login successful - not logging sensitive data (email/token)
 
         setIsLoading(false);
         

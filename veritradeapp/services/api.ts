@@ -73,7 +73,7 @@ class ApiService {
   }
 
   async post<T>(endpoint: string, body: any, requiresAuth: boolean = true) {
-    console.log('API POST:', endpoint, body);
+    // Not logging request body for security - may contain sensitive data
     return this.request<T>(
       endpoint,
       {

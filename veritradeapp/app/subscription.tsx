@@ -32,9 +32,10 @@ export default function SubscriptionScreen() {
       id: 'starter',
       name: 'SME Starter',
       price: '₦0',
-      period: '/Forever',
+      period: 'Per Month',
       features: [
-        { text: '5 Scans/month', included: true },
+        { text: '2 Biz Reports Investigations', included: true },
+        { text: '5 Scans', included: true },
         { text: 'Basic CAC Check', included: true },
         { text: 'Email Support', included: true },
       ],
@@ -45,8 +46,9 @@ export default function SubscriptionScreen() {
       id: 'pro',
       name: 'SME Pro',
       price: '₦15,000',
-      period: '/Monthly',
+      period: 'Per Month',
       features: [
+        { text: '4 Biz Reports Investigations', included: true },
         { text: 'Unlimited Scans', included: true },
         { text: 'Deep Fraud Detection', included: true },
         { text: 'Priority Support', included: true },
@@ -59,10 +61,11 @@ export default function SubscriptionScreen() {
     {
       id: 'elite',
       name: 'VERITRADE Elite',
-      price: '₦50,000',
-      period: '/Monthly',
+      price: '₦80,000',
+      period: 'Per Month',
       features: [
         { text: 'Everything in Pro', included: true },
+        { text: 'Unlimited Biz Reports Investigations', included: true },
         { text: 'Physical Site Verification', included: true },
         { text: 'Dedicated Account Manager', included: true },
         { text: 'Custom Integration Support', included: true },
@@ -74,8 +77,10 @@ export default function SubscriptionScreen() {
   ];
 
   const handleUpgrade = (planId: string) => {
+    if (process.env.NODE_ENV === 'development') {
     console.log('Upgrading to:', planId);
-    // Handle upgrade logic
+    } else {
+    console.log('Upgrading to:');}
   };
 
   return (

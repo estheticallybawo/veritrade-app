@@ -84,7 +84,7 @@ const nextMockId = (items: VerificationResponse[]) => {
 export const verificationService = {
   // Submit new verification request
   async submit(request: VerificationRequest) {
-    console.log('verification.ts - Calling API with:', request);
+    // Not logging request details for security (contains business info)
     if (USE_MOCK_VERIFICATIONS) {
       const items = getMockVerifications();
       const now = new Date().toISOString();

@@ -107,8 +107,13 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Action Cards Section */}
-        <View style={styles.actionCardsRow}>
+        {/* Action Cards Section - Horizontally Scrollable */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.actionCardsScrollContent}
+          style={styles.actionCardsRow}
+        >
           <TouchableOpacity 
             style={styles.actionCard}
             onPress={() => router.push('/verify-business')}
@@ -121,9 +126,22 @@ export default function HomeScreen() {
           </TouchableOpacity>
           
           <TouchableOpacity 
+            style={styles.actionCard}
+            onPress={() => router.push('/report-business')}
+          >
+            <View style={styles.actionIconCircleRed}>
+              <Ionicons name="alert-circle" size={28} color="#fff" />
+            </View>
+            <Text style={styles.actionCardTitle}>Report Business</Text>
+            <Text style={styles.actionCardSubtitle}>Fraud & Issues</Text>
+          </TouchableOpacity>
+
+
+          <TouchableOpacity 
             style={[styles.actionCard, styles.actionCardDisabled]}
             disabled={true}
           >
+
             <View style={styles.comingSoonBadge}>
               <Text style={styles.comingSoonText}>COMING SOON</Text>
             </View>
@@ -133,7 +151,9 @@ export default function HomeScreen() {
             <Text style={[styles.actionCardTitle, styles.actionCardTitleDisabled]}>Scan Invoice</Text>
             <Text style={[styles.actionCardSubtitle, styles.actionCardSubtitleDisabled]}>OCR Fraud Detect</Text>
           </TouchableOpacity>
-        </View>
+
+          
+        </ScrollView>
 
         {/* Stats Row */}
         <View style={styles.statsRow}>
@@ -499,13 +519,15 @@ const styles = StyleSheet.create({
   },
   // Action Cards Styles
   actionCardsRow: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
     marginTop: 20,
+  },
+  actionCardsScrollContent: {
+    paddingHorizontal: 20,
     gap: 12,
+    paddingRight: 20,
   },
   actionCard: {
-    flex: 1,
+    width: 160,
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
@@ -559,6 +581,15 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     backgroundColor: '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  actionIconCircleRed: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#EF4444',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
